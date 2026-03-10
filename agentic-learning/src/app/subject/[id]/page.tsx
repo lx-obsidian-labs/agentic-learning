@@ -1,18 +1,73 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { subjects, courses } from '@/data/courses';
 import CourseCard from '@/components/CourseCard';
 import { ChevronLeft, Brain, ChevronRight, Home } from 'lucide-react';
+import type { CourseCardDTO, SubjectDTO } from '@/lib/catalogTypes';
 
 export default function SubjectPage() {
   const params = useParams();
   const subjectId = params.id as string;
   
-  const subject = subjects.find(s => s.id === subjectId);
-  const subjectCourses = courses.filter(c => c.subject === subjectId);
+  const [subject, setSubject] = useState<SubjectDTO | null>(null);
+  const [subjectCourses, setSubjectCourses] = useState<CourseCardDTO[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!subjectId) return;
+
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const [subjectsRes, coursesRes] = await Promise.all([
+          fetch('/api/catalog/subjects', { signal: controller.signal }),
+          fetch(`/api/catalog/courses?subjectId=${encodeURIComponent(subjectId)}`, { signal: controller.signal }),
+        ]);
+
+        if (!subjectsRes.ok) throw new Error('Failed to load subjects');
+        if (!coursesRes.ok) throw new Error('Failed to load courses');
+
+        const [subjectsData, coursesData] = (await Promise.all([
+          subjectsRes.json(),
+          coursesRes.json(),
+        ])) as [SubjectDTO[], CourseCardDTO[]];
+
+        setSubject(subjectsData.find((s) => s.id === subjectId) ?? null);
+        setSubjectCourses(coursesData);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setError(err instanceof Error ? err.message : 'Failed to load subject');
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    };
+
+    void load();
+    return () => controller.abort();
+  }, [subjectId]);
   
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading subject...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">{error}</p>
+      </div>
+    );
+  }
+
   if (!subject) {
     return (
       <div className="min-h-screen flex items-center justify-center">

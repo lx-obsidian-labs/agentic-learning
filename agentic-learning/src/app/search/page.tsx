@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { courses, subjects, Lesson } from '@/data/courses';
-import { useProgress } from '@/hooks/useProgress';
-import { Search, ChevronLeft, Play, Clock, BookOpen, Filter, X, Home, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, Play, Clock, BookOpen, X, Home, ChevronRight, Brain, Lightbulb, Target, Zap, ArrowRight } from 'lucide-react';
+import type { SubjectDTO } from '@/lib/catalogTypes';
 
 interface SearchResult {
   type: 'lesson' | 'course' | 'subject';
@@ -14,71 +13,131 @@ interface SearchResult {
   courseId?: string;
 }
 
+interface AIRecommendation {
+  type: 'topic' | 'lesson' | 'concept' | 'practice';
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  estimatedTime?: string;
+  relatedConcepts?: string[];
+}
+
 export default function SearchPage() {
-  const { progress } = useProgress();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [recommendations, setRecommendations] = useState<AIRecommendation[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isGettingRecommendations, setIsGettingRecommendations] = useState(false);
+  const [subjects, setSubjects] = useState<SubjectDTO[]>([]);
 
   useEffect(() => {
-    if (query.trim().length < 2) {
+    const controller = new AbortController();
+
+    const loadSubjects = async () => {
+      try {
+        const res = await fetch('/api/catalog/subjects', { signal: controller.signal });
+        if (!res.ok) return;
+        const data = (await res.json()) as unknown;
+        if (Array.isArray(data)) setSubjects(data as SubjectDTO[]);
+      } catch {
+        // ignore
+      }
+    };
+
+    void loadSubjects();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
       setResults([]);
+      setRecommendations([]);
+      setIsSearching(false);
+      setIsGettingRecommendations(false);
       return;
     }
 
-    setIsSearching(true);
-    const searchTerm = query.toLowerCase();
-    const newResults: SearchResult[] = [];
-
-    subjects.forEach(subject => {
-      if (subject.name.toLowerCase().includes(searchTerm) || 
-          subject.description.toLowerCase().includes(searchTerm)) {
-        newResults.push({
-          type: 'subject',
-          id: subject.id,
-          title: subject.name,
-          subtitle: subject.description,
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        setIsSearching(true);
+        const res = await fetch(`/api/catalog/search?query=${encodeURIComponent(q)}&limit=20`, {
+          signal: controller.signal,
         });
-      }
-    });
 
-    courses.forEach(course => {
-      if (course.title.toLowerCase().includes(searchTerm) ||
-          course.description.toLowerCase().includes(searchTerm)) {
-        newResults.push({
-          type: 'course',
-          id: course.id,
-          title: course.title,
-          subtitle: course.description,
+        if (!res.ok) throw new Error('Search failed');
+        const data = (await res.json()) as unknown;
+        if (Array.isArray(data)) setResults(data as SearchResult[]);
+        else setResults([]);
+      } catch {
+        if (controller.signal.aborted) return;
+        setResults([]);
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
+      }
+    }, 200);
+
+    const fetchRecommendations = async () => {
+      try {
+        setIsGettingRecommendations(true);
+        const res = await fetch('/api/catalog/search/ai-enhanced', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ 
+            query: q,
+            context: {
+              grade: 12,
+            }
+          }),
         });
-      }
 
-      course.modules.forEach(module => {
-        module.lessons.forEach(lesson => {
-          if (lesson.title.toLowerCase().includes(searchTerm) ||
-              lesson.keyPoints.some(kp => kp.toLowerCase().includes(searchTerm))) {
-            newResults.push({
-              type: 'lesson',
-              id: lesson.id,
-              title: lesson.title,
-              subtitle: `${course.title} - ${module.title}`,
-              courseId: course.id,
-            });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.recommendations && Array.isArray(data.recommendations)) {
+            setRecommendations(data.recommendations);
           }
-        });
-      });
-    });
+        }
+      } catch {
+        // If AI recommendations fail, continue silently
+      } finally {
+        setIsGettingRecommendations(false);
+      }
+    };
 
-    setResults(newResults.slice(0, 20));
-    setIsSearching(false);
+    void fetchRecommendations();
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
   }, [query]);
 
-  const getIcon = (type: string) => {
+  const getTypeIcon = (type: string) => {
     switch (type) {
       case 'subject': return <BookOpen className="w-5 h-5" />;
       case 'course': return <Play className="w-5 h-5" />;
       case 'lesson': return <Clock className="w-5 h-5" />;
       default: return <Search className="w-5 h-5" />;
+    }
+  };
+
+  const getRecommendationIcon = (type: string) => {
+    switch (type) {
+      case 'topic': return <Target className="w-4 h-4" />;
+      case 'lesson': return <Play className="w-4 h-4" />;
+      case 'concept': return <Lightbulb className="w-4 h-4" />;
+      case 'practice': return <Zap className="w-4 h-4" />;
+      default: return <Brain className="w-4 h-4" />;
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-700';
+      case 'medium': return 'bg-yellow-100 text-yellow-700';
+      case 'low': return 'bg-green-100 text-green-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -177,7 +236,7 @@ export default function SearchPage() {
                     className="p-4 bg-white border border-gray-200 rounded-xl text-center hover:border-gray-300 transition-colors"
                   >
                     <p className="font-medium text-gray-900">{subject.name}</p>
-                    <p className="text-xs text-gray-500">{subject.courses} courses</p>
+                    <p className="text-xs text-gray-500">{subject.courseCount} courses</p>
                   </Link>
                 ))}
               </div>
@@ -198,8 +257,71 @@ export default function SearchPage() {
               Try searching for something else
             </p>
           </div>
-        ) : (
+         ) : (
           <>
+            {query.length >= 2 && (
+              <>
+                {isGettingRecommendations ? (
+                  <div className="mb-6 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Brain className="w-5 h-5 text-purple-600" />
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">AI-Powered Recommendations</h3>
+                    </div>
+                    <div className="animate-pulse space-y-2">
+                      {[1,2,3].map(n => (
+                        <div key={n} className="h-16 bg-gray-100 dark:bg-gray-800 rounded-lg" />
+                      ))}
+                    </div>
+                  </div>
+                ) : recommendations.length > 0 && (
+                  <div className="mb-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+                      <div className="flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-purple-600" />
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">AI Study Recommendations</h3>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">Based on your search: &quot;{query}&quot;</p>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      {recommendations.slice(0, 5).map((rec, idx) => (
+                        <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-start gap-2">
+                              <div className={`p-1 rounded ${getPriorityColor(rec.priority)}`}>
+                                {getRecommendationIcon(rec.type)}
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                                  {rec.title}
+                                </h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                  {rec.description}
+                                </p>
+                              </div>
+                            </div>
+                            {rec.estimatedTime && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                ⏱ {rec.estimatedTime}
+                              </span>
+                            )}
+                          </div>
+                          {rec.relatedConcepts && rec.relatedConcepts.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {rec.relatedConcepts.slice(0, 3).map((concept, i) => (
+                                <span key={i} className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
+                                  {concept}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
             <p className="text-sm text-gray-500 mb-4">
               Found {results.length} result{results.length !== 1 ? 's' : ''}
             </p>
@@ -213,7 +335,7 @@ export default function SearchPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getColor(result.type)}`}>
-                      {getIcon(result.type)}
+                      {getTypeIcon(result.type)}
                     </div>
                     
                     <div className="flex-1 min-w-0">

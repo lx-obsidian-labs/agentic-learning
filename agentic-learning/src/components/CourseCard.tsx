@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Course } from '@/data/courses';
+import type { CourseCardDTO } from '@/lib/catalogTypes';
 import { Clock, User, BarChart3 } from 'lucide-react';
 
 interface CourseCardProps {
-  course: Course;
+  course: CourseCardDTO;
 }
 
 const difficultyColors = {
@@ -15,8 +15,6 @@ const difficultyColors = {
 };
 
 export default function CourseCard({ course }: CourseCardProps) {
-  const totalLessons = course.modules.reduce((acc, mod) => acc + mod.lessons.length, 0);
-  
   return (
     <Link href={`/course/${course.id}`}>
       <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-lg hover:shadow-gray-200/50">
@@ -26,9 +24,9 @@ export default function CourseCard({ course }: CourseCardProps) {
             background: `linear-gradient(135deg, #1e293b 0%, #334155 100%)`
           }}
         >
-          {course.thumbnail && (
+          {course.thumbnailUrl && (
             <img 
-              src={course.thumbnail} 
+              src={course.thumbnailUrl} 
               alt={course.title}
               className="absolute inset-0 w-full h-full object-cover opacity-30"
             />
@@ -50,7 +48,7 @@ export default function CourseCard({ course }: CourseCardProps) {
           <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
             <div className="flex items-center gap-1">
               <User className="w-4 h-4" />
-              <span>{course.instructor}</span>
+              <span>{course.instructorName}</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
@@ -61,10 +59,10 @@ export default function CourseCard({ course }: CourseCardProps) {
           <div className="flex items-center justify-between pt-4 border-t border-gray-100">
             <div className="flex items-center gap-1 text-sm">
               <BarChart3 className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-600">{course.modules.length} Modules</span>
+              <span className="text-gray-600">{course.moduleCount} Modules</span>
             </div>
             <div className="flex items-center gap-1 text-sm">
-              <span className="text-gray-600">{totalLessons} Lessons</span>
+              <span className="text-gray-600">{course.lessonCount} Lessons</span>
             </div>
           </div>
           

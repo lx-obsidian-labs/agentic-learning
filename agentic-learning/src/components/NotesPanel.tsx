@@ -1,17 +1,20 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { 
-  Download, 
-  ChevronDown, 
-  ChevronUp, 
-  Lightbulb, 
-  CheckCircle2, 
-  Printer, 
-  FileText,
+import { useMemo, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import {
   BookOpen,
+  Check,
+  ChevronDown,
+  ChevronUp,
   Copy,
-  Check
+  Download,
+  FileText,
+  Lightbulb,
+  Printer,
 } from 'lucide-react';
 
 interface NotesPanelProps {
@@ -20,292 +23,123 @@ interface NotesPanelProps {
   lessonTitle: string;
 }
 
+function escapeHtml(input: string) {
+  return input
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function safeFilename(input: string) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/-+/g, '-')
+    .replaceAll(/(^-|-$)/g, '')
+    .slice(0, 80);
+}
+
 export default function NotesPanel({ notes, keyPoints, lessonTitle }: NotesPanelProps) {
   const [expandedSections, setExpandedSections] = useState<string[]>(['keyPoints', 'notes']);
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
-  
+
+  const markdownPlugins = useMemo(() => [remarkGfm, remarkMath], []);
+  const htmlPlugins = useMemo(() => [rehypeKatex], []);
+
   const toggleSection = (section: string) => {
-    setExpandedSections(prev => 
-      prev.includes(section) 
-        ? prev.filter(s => s !== section)
-        : [...prev, section]
+    setExpandedSections(prev =>
+      prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
     );
   };
-  
-  const renderMarkdown = (text: string) => {
-    const lines = text.split('\n');
-    const elements: JSX.Element[] = [];
-    let inList = false;
-    let listItems: string[] = [];
-    let tableData: string[][] = [];
-    let inTable = false;
-    
-    const flushList = () => {
-      if (listItems.length > 0) {
-        elements.push(
-          <ul key={`list-${elements.length}`} className="space-y-2 my-4 ml-4">
-            {listItems.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-3">
-                <span className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
-                <span className="text-gray-800 leading-relaxed">{item}</span>
-              </li>
-            ))}
-          </ul>
-        );
-        listItems = [];
-      }
-      inList = false;
-    };
-    
-    const flushTable = () => {
-      if (tableData.length > 0) {
-        elements.push(
-          <div key={`table-${elements.length}`} className="overflow-x-auto my-6">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="bg-gray-100">
-                  {tableData[0].map((cell, idx) => (
-                    <th key={idx} className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-800">
-                      {cell}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {tableData.slice(1).map((row, rowIdx) => (
-                  <tr key={rowIdx}>
-                    {row.map((cell, cellIdx) => (
-                      <td key={cellIdx} className="border border-gray-300 px-4 py-2 text-gray-700">
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-        tableData = [];
-      }
-      inTable = false;
-    };
-    
-    lines.forEach((line, idx) => {
-      if (line.startsWith('# ')) {
-        flushList();
-        flushTable();
-        elements.push(
-          <h1 key={idx} className="text-2xl font-bold text-gray-900 mb-4 mt-6 first:mt-0 border-b-2 border-blue-500 pb-2">
-            {line.slice(2)}
-          </h1>
-        );
-      } else if (line.startsWith('## ')) {
-        flushList();
-        flushTable();
-        elements.push(
-          <h2 key={idx} className="text-xl font-semibold text-gray-800 mb-3 mt-5 flex items-center gap-2">
-            <span className="w-1 h-6 bg-blue-500 rounded-full" />
-            {line.slice(3)}
-          </h2>
-        );
-      } else if (line.startsWith('### ')) {
-        flushList();
-        flushTable();
-        elements.push(
-          <h3 key={idx} className="text-lg font-semibold text-gray-800 mb-2 mt-4 text-blue-700">
-            {line.slice(4)}
-          </h3>
-        );
-      } else if (line.startsWith('|') && line.includes('|')) {
-        flushList();
-        inTable = true;
-        const cells = line.split('|').filter(c => c.trim()).map(c => c.trim());
-        if (!line.includes('---')) {
-          tableData.push(cells);
-        }
-      } else if (line.startsWith('- ') || line.startsWith('* ')) {
-        flushTable();
-        inList = true;
-        listItems.push(line.slice(2));
-      } else if (line.match(/^\d+\.\s/)) {
-        flushTable();
-        inList = true;
-        listItems.push(line.replace(/^\d+\.\s/, ''));
-      } else if (line.startsWith('**') && line.endsWith('**')) {
-        flushList();
-        flushTable();
-        elements.push(
-          <p key={idx} className="font-bold text-gray-900 mb-2 mt-3 text-lg bg-yellow-50 p-2 rounded">
-            {line.slice(2, -2)}
-          </p>
-        );
-      } else if (line.startsWith('> ')) {
-        flushList();
-        flushTable();
-        elements.push(
-          <blockquote key={idx} className="border-l-4 border-blue-500 pl-4 my-4 italic text-gray-700 bg-blue-50 p-3 rounded-r">
-            {line.slice(2)}
-          </blockquote>
-        );
-      } else if (line.trim() === '') {
-        flushList();
-        flushTable();
-      } else {
-        if (inList) flushList();
-        if (inTable) flushTable();
-        
-        const formattedLine = line
-          .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>')
-          .replace(/\*(.+?)\*/g, '<em class="italic">$1</em>')
-          .replace(/`(.+?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-blue-600 font-mono text-sm">$1</code>');
-        
-        elements.push(
-          <p 
-            key={idx} 
-            className="text-gray-800 mb-2 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: formattedLine }}
-          />
-        );
-      }
-    });
-    
-    flushList();
-    flushTable();
-    
-    return elements;
-  };
 
-  const handleDownload = async (format: 'txt' | 'print') => {
+  const handleDownload = async (format: 'md' | 'print') => {
     setDownloading(true);
-    
-    if (format === 'print') {
-      const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>${lessonTitle} - Study Notes</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body { 
-              font-family: 'Inter', Arial, sans-serif; 
-              padding: 40px; 
-              max-width: 800px; 
-              margin: 0 auto; 
-              color: #1a1a1a;
-              line-height: 1.6;
-            }
-            h1 { 
-              font-size: 24px; 
-              border-bottom: 3px solid #3b82f6; 
-              padding-bottom: 10px; 
-              margin-bottom: 20px;
-              color: #111;
-            }
-            h2 { 
-              font-size: 18px; 
-              margin-top: 30px; 
-              margin-bottom: 15px; 
-              color: #222;
-              border-left: 4px solid #3b82f6;
-              padding-left: 10px;
-            }
-            h3 { font-size: 16px; margin-top: 20px; margin-bottom: 10px; color: #333; }
-            ul { margin-left: 20px; margin-bottom: 15px; }
-            li { margin-bottom: 8px; }
-            .key-points { 
-              background: #f0f9ff; 
-              padding: 20px; 
-              border-radius: 8px; 
-              margin-bottom: 30px;
-              border: 1px solid #bae6fd;
-            }
-            .key-points ul { list-style: none; margin: 0; }
-            .key-points li { display: flex; align-items: flex-start; gap: 10px; }
-            .key-points li::before { content: "✓"; color: #22c55e; font-weight: bold; }
-            code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
-            blockquote { 
-              border-left: 4px solid #3b82f6; 
-              background: #eff6ff; 
-              padding: 12px; 
-              margin: 15px 0; 
-              font-style: italic;
-            }
-            .footer { 
-              margin-top: 40px; 
-              padding-top: 20px; 
-              border-top: 1px solid #e5e7eb; 
-              font-size: 12px; 
-              color: #6b7280;
-              text-align: center;
-            }
-            @media print {
-              body { padding: 20px; }
-              h1 { font-size: 20px; }
-            }
-          </style>
-        </head>
-        <body>
-          <h1>📚 ${lessonTitle}</h1>
-          
-          <div class="key-points">
-            <h2>🎯 Key Points</h2>
-            <ul>
-              ${keyPoints.map(p => `<li>${p}</li>`).join('')}
-            </ul>
-          </div>
-          
-          <h2>📖 Detailed Notes</h2>
-          ${notes
-            .replace(/^# (.+)$/gm, '<h2>$1</h2>')
-            .replace(/^## (.+)$/gm, '<h3>$1</h3>')
-            .replace(/^### (.+)$/gm, '<h4>$1</h4>')
-            .replace(/^- (.+)$/gm, '<li>$1</li>')
-            .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
-            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\n/g, '<br>')
-          }
-          
-          <div class="footer">
-            Generated by Agentic Learning • Study smart, not hard
-          </div>
-        </body>
-        </html>
-      `;
-      
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(printContent);
-        printWindow.document.close();
-        printWindow.print();
+
+    try {
+      if (format === 'print') {
+        const title = escapeHtml(`${lessonTitle} — Study Notes`);
+        const points = keyPoints.map(escapeHtml);
+        const bodyNotes = escapeHtml(notes).replaceAll('\n', '<br/>');
+
+        const printContent = `
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+      * { box-sizing: border-box; }
+      body {
+        font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        padding: 32px;
+        max-width: 900px;
+        margin: 0 auto;
+        color: #111827;
+        line-height: 1.65;
       }
-    } else {
-      const content = `# 📚 ${lessonTitle}
+      h1 { font-size: 22px; margin: 0 0 16px; }
+      h2 { font-size: 16px; margin: 24px 0 12px; }
+      .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+      ul { margin: 0; padding-left: 18px; }
+      li { margin: 8px 0; }
+      .notes { white-space: normal; }
+      .footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
+      @media print { body { padding: 18px; } }
+    </style>
+  </head>
+  <body>
+    <h1>${escapeHtml(lessonTitle)}</h1>
 
-## 🎯 Key Points
-${keyPoints.map(p => `• ${p}`).join('\n')}
+    <div class="card">
+      <h2>Key Points</h2>
+      <ul>
+        ${points.map(p => `<li>${p}</li>`).join('')}
+      </ul>
+    </div>
+
+    <h2>Detailed Notes</h2>
+    <div class="card notes">${bodyNotes}</div>
+
+    <div class="footer">Generated by Agentic Learning</div>
+  </body>
+</html>
+        `;
+
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(printContent);
+          printWindow.document.close();
+          printWindow.focus();
+          printWindow.print();
+        }
+      } else {
+        const content = `# ${lessonTitle}
+
+## Key Points
+${keyPoints.map(p => `- ${p}`).join('\n')}
 
 ---
 
-## 📖 Detailed Notes
+## Detailed Notes
 ${notes}
-
----
-Generated by Agentic Learning
 `;
-      
-      const blob = new Blob([content], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${lessonTitle.replace(/\s+/g, '-').toLowerCase()}.md`;
-      a.click();
-      URL.revokeObjectURL(url);
+
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeFilename(lessonTitle) || 'study-notes'}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } finally {
+      setDownloading(false);
     }
-    
-    setDownloading(false);
   };
 
   const handleCopy = () => {
@@ -314,23 +148,23 @@ Generated by Agentic Learning
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white dark:from-gray-950 dark:to-gray-900">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
             <BookOpen className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Study Notes</h2>
-            <p className="text-xs text-gray-500">Comprehensive learning material</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Study Notes</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Comprehensive learning material</p>
           </div>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-sm font-medium transition-colors"
             title="Copy to clipboard"
           >
             {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
@@ -343,29 +177,29 @@ Generated by Agentic Learning
             Print / PDF
           </button>
           <button
-            onClick={() => handleDownload('txt')}
+            onClick={() => handleDownload('md')}
             disabled={downloading}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-900 hover:bg-gray-800 disabled:opacity-60 text-white rounded-lg text-sm font-medium transition-colors"
           >
             <Download className="w-4 h-4" />
             {downloading ? '...' : 'Export'}
           </button>
         </div>
       </div>
-      
-      <div ref={printRef}>
-        <div className="border-b border-gray-200">
+
+      <div>
+        <div className="border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={() => toggleSection('keyPoints')}
-            className="w-full p-4 flex items-center justify-between hover:bg-yellow-50 transition-colors"
+            className="w-full p-4 flex items-center justify-between hover:bg-yellow-50 dark:hover:bg-yellow-950/20 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-950/40 rounded-lg flex items-center justify-center">
                 <Lightbulb className="w-4 h-4 text-yellow-600" />
               </div>
               <div className="text-left">
-                <span className="font-semibold text-gray-900">Key Points</span>
-                <p className="text-xs text-gray-500">{keyPoints.length} important concepts</p>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Key Points</span>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{keyPoints.length} important concepts</p>
               </div>
             </div>
             {expandedSections.includes('keyPoints') ? (
@@ -374,35 +208,38 @@ Generated by Agentic Learning
               <ChevronDown className="w-5 h-5 text-gray-400" />
             )}
           </button>
-          
+
           {expandedSections.includes('keyPoints') && (
-            <div className="px-4 pb-4 bg-yellow-50/50">
+            <div className="px-4 pb-4 bg-yellow-50/50 dark:bg-yellow-950/10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {keyPoints.map((point, idx) => (
-                  <div key={idx} className="flex items-start gap-3 bg-white p-3 rounded-lg border border-yellow-200">
-                    <span className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center text-xs font-bold text-yellow-700 flex-shrink-0">
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 bg-white dark:bg-gray-900 p-3 rounded-lg border border-yellow-200 dark:border-yellow-900/40"
+                  >
+                    <span className="w-6 h-6 bg-yellow-100 dark:bg-yellow-950/40 rounded-full flex items-center justify-center text-xs font-bold text-yellow-700 flex-shrink-0">
                       {idx + 1}
                     </span>
-                    <span className="text-gray-800 text-sm font-medium">{point}</span>
+                    <span className="text-gray-800 dark:text-gray-200 text-sm font-medium">{point}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
         </div>
-        
-        <div className="border-b border-gray-200">
+
+        <div className="border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={() => toggleSection('notes')}
-            className="w-full p-4 flex items-center justify-between hover:bg-blue-50 transition-colors"
+            className="w-full p-4 flex items-center justify-between hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-950/40 rounded-lg flex items-center justify-center">
                 <FileText className="w-4 h-4 text-blue-600" />
               </div>
               <div className="text-left">
-                <span className="font-semibold text-gray-900">Detailed Notes</span>
-                <p className="text-xs text-gray-500">In-depth explanations and examples</p>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Detailed Notes</span>
+                <p className="text-xs text-gray-500 dark:text-gray-400">In-depth explanations and examples</p>
               </div>
             </div>
             {expandedSections.includes('notes') ? (
@@ -411,11 +248,89 @@ Generated by Agentic Learning
               <ChevronDown className="w-5 h-5 text-gray-400" />
             )}
           </button>
-          
+
           {expandedSections.includes('notes') && (
-            <div className="px-4 pb-4 bg-white">
-              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                {renderMarkdown(notes)}
+            <div className="px-4 pb-4 bg-white dark:bg-gray-900">
+              <div className="bg-gray-50 dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800">
+                <div className="prose prose-gray max-w-none dark:prose-invert prose-sm sm:prose-base">
+                  <ReactMarkdown
+                    remarkPlugins={markdownPlugins}
+                    rehypePlugins={htmlPlugins}
+                    components={{
+                      p: ({ children }) => (
+                        <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300">{children}</p>
+                      ),
+                      h1: ({ children }) => (
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 mt-6">{children}</h1>
+                      ),
+                      h2: ({ children }) => (
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3 mt-5">{children}</h2>
+                      ),
+                      h3: ({ children }) => (
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 mt-4">{children}</h3>
+                      ),
+                      ul: ({ children }) => (
+                        <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-700 dark:text-gray-300">{children}</ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-700 dark:text-gray-300">{children}</ol>
+                      ),
+                      li: ({ children }) => (
+                        <li className="leading-relaxed">{children}</li>
+                      ),
+                      code: ({ className, children, ...props }) => {
+                        const match = /language-(\w+)/.exec(className || '');
+                        const isInline = !match;
+                        return isInline ? (
+                          <code className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-800 rounded text-sm font-mono text-purple-600 dark:text-purple-400" {...props}>
+                            {children}
+                          </code>
+                        ) : (
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                      pre: ({ children }) => (
+                        <pre className="bg-gray-900 text-gray-100 p-4 rounded-xl overflow-x-auto mb-4 text-sm">
+                          {children}
+                        </pre>
+                      ),
+                      a({ href, children, ...props }) {
+                        const safeHref =
+                          href && (href.startsWith('https://') || href.startsWith('http://') || href.startsWith('mailto:'))
+                              ? href
+                              : undefined;
+                        if (!safeHref) return <span {...props}>{children}</span>;
+                        return (
+                          <a href={safeHref} target="_blank" rel="noreferrer noopener" className="text-blue-600 dark:text-blue-400 hover:underline" {...props}>
+                            {children}
+                          </a>
+                        );
+                      },
+                      blockquote: ({ children }) => (
+                        <blockquote className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 dark:bg-blue-950/30 rounded-r-lg italic text-gray-700 dark:text-gray-300">
+                          {children}
+                        </blockquote>
+                      ),
+                      table: ({ children }) => (
+                        <div className="overflow-x-auto my-4">
+                          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
+                            {children}
+                          </table>
+                        </div>
+                      ),
+                      thead: ({ children }) => (
+                        <thead className="bg-gray-100 dark:bg-gray-800">{children}</thead>
+                      ),
+                      td: ({ children }) => (
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{children}</td>
+                      ),
+                    }}
+                  >
+                    {notes}
+                  </ReactMarkdown>
+                </div>
               </div>
             </div>
           )}
@@ -424,3 +339,4 @@ Generated by Agentic Learning
     </div>
   );
 }
+

@@ -1,0 +1,509 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  student
+  teacher
+  admin
+}
+
+enum ThemePreference {
+  system
+  light
+  dark
+}
+
+enum CourseStatus {
+  draft
+  published
+}
+
+enum CourseDifficulty {
+  beginner
+  intermediate
+  advanced
+}
+
+enum VideoQuality {
+  must_watch
+  supplementary
+}
+
+enum QuestionDifficulty {
+  easy
+  medium
+  hard
+}
+
+enum CompetitionStatus {
+  draft
+  active
+  ended
+}
+
+enum ServiceMode {
+  online
+  in_person
+}
+
+enum TeacherVerificationStatus {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum BookingStatus {
+  pending_payment
+  confirmed
+  in_session
+  completed
+  cancelled_by_student
+  cancelled_by_teacher
+  disputed
+  refunded
+  expired
+}
+
+enum PaymentType {
+  teacher_registration
+  student_registration
+  booking_charge
+  booking_refund
+  teacher_payout
+}
+
+enum PaymentStatus {
+  initiated
+  requires_action
+  authorized
+  captured
+  released
+  refunded
+  failed
+}
+
+enum PayoutStatus {
+  pending
+  processing
+  paid
+  failed
+  reversed
+}
+
+model UserProfile {
+  id          String   @id @default(uuid())
+  clerkUserId String   @unique
+  role        UserRole @default(student)
+  displayName String?
+  createdAt   DateTime @default(now())
+
+  settings              UserSettings?
+  lessonCompletions     LessonCompletion[]
+  bookmarks             Bookmark[]
+  quizAttempts          QuizAttempt[]
+  studySessions         StudySession[]
+  spacedRepetitionItems SpacedRepetitionItem[]
+  competitionEntries    CompetitionEntry[]
+  teacherProfile        TeacherProfile?
+  studentBookings       Booking[]            @relation("StudentBookings")
+  paymentsMade          PaymentTransaction[] @relation("PayerPayments")
+  studentReviews        Review[]             @relation("StudentReviews")
+}
+
+model UserSettings {
+  userId        String          @id
+  user          UserProfile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme         ThemePreference @default(system)
+  autoplay      Boolean         @default(true)
+  playbackSpeed Float           @default(1)
+  notifications Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Subject {
+  id          String @id @default(uuid())
+  slug        String @unique
+  name        String
+  color       String
+  description String
+  iconKey     String
+  order       Int    @default(0)
+
+  courses   Course[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+model Course {
+  id             String           @id @default(uuid())
+  slug           String           @unique
+  subjectId      String
+  subject        Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title          String
+  grade          Int
+  description    String
+  difficulty     CourseDifficulty
+  estimatedHours Int
+  thumbnailUrl   String?
+  instructorName String?
+  status         CourseStatus     @default(draft)
+  publishedAt    DateTime?
+
+  modules     Module[]
+  sessions    StudySession[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([subjectId])
+  @@index([status])
+}
+
+model Module {
+  id       String @id @default(uuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  slug     String
+  title    String
+  order    Int
+
+  lessons   Lesson[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, slug])
+  @@unique([courseId, order])
+  @@index([courseId])
+}
+
+model Lesson {
+  id              String      @id @default(uuid())
+  moduleId        String
+  module          Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  slug            String
+  title           String
+  order           Int
+  durationMinutes Int?
+  youtubeVideoId  String?
+  videoQuality    VideoQuality @default(must_watch)
+  notesMarkdown   String      @db.Text
+  keyPoints       String[]
+  timestamps      Json?
+
+  quizQuestions QuizQuestion[]
+  completions   LessonCompletion[]
+  bookmarks     Bookmark[]
+  quizAttempts  QuizAttempt[]
+  sessions      StudySession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([moduleId, slug])
+  @@unique([moduleId, order])
+  @@index([moduleId])
+}
+
+model QuizQuestion {
+  id           String            @id @default(uuid())
+  lessonId     String
+  lesson       Lesson            @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  prompt       String            @db.Text
+  options      String[]
+  correctIndex Int
+  explanation  String?           @db.Text
+  difficulty   QuestionDifficulty @default(medium)
+  tags         String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lessonId])
+}
+
+model LessonCompletion {
+  userId      String
+  lessonId    String
+  completedAt DateTime @default(now())
+
+  user   UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([userId, lessonId])
+  @@index([lessonId])
+}
+
+model Bookmark {
+  userId   String
+  lessonId String
+  createdAt DateTime @default(now())
+
+  user   UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([userId, lessonId])
+  @@index([lessonId])
+}
+
+model QuizAttempt {
+  id         String   @id @default(uuid())
+  userId     String
+  lessonId   String
+  score      Int
+  total      Int
+  passed     Boolean
+  answers    Int[]
+  durationMs Int
+  createdAt  DateTime @default(now())
+
+  user   UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([lessonId])
+  @@index([createdAt])
+}
+
+model StudySession {
+  id         String   @id @default(uuid())
+  userId     String
+  startedAt  DateTime @default(now())
+  endedAt    DateTime?
+  durationMs Int
+
+  courseId String?
+  course   Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  lessonId String?
+  lesson   Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([startedAt])
+}
+
+model SpacedRepetitionItem {
+  userId       String
+  topicKey     String
+  nextReviewAt DateTime
+  intervalDays Int
+  easeFactor   Float
+  reviewsCount Int
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicKey])
+  @@index([nextReviewAt])
+}
+
+model Competition {
+  id          String            @id @default(uuid())
+  year        Int
+  name        String
+  startDate   DateTime
+  endDate     DateTime
+  status      CompetitionStatus @default(draft)
+  description String
+
+  prizes  CompetitionPrize[]
+  entries CompetitionEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([year])
+  @@index([status])
+}
+
+model CompetitionPrize {
+  id            String      @id @default(uuid())
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  rank          Int
+  title         String
+  description   String
+  value         String?
+
+  @@index([competitionId])
+}
+
+model CompetitionEntry {
+  competitionId     String
+  userId            String
+  xp                Int  @default(0)
+  level             Int  @default(1)
+  streak            Int  @default(0)
+  completedLessons  Int  @default(0)
+  badgesCount       Int  @default(0)
+  rank              Int?
+
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  user        UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([competitionId, userId])
+  @@index([competitionId])
+}
+
+model TeacherProfile {
+  userId                String                    @id
+  user                  UserProfile               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                   String?                   @db.Text
+  headline              String?
+  hourlyRateCents       Int
+  currency              String                    @default("ZAR")
+  verificationStatus    TeacherVerificationStatus @default(pending)
+  registrationFeePaidAt DateTime?
+  isActive              Boolean                   @default(false)
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  services        TeacherService[]
+  availabilities  TeacherAvailability[]
+  teacherBookings Booking[] @relation("TeacherBookings")
+  payouts         Payout[]
+  reviewsReceived Review[]
+
+  @@index([verificationStatus, isActive])
+}
+
+model TeacherService {
+  id             String         @id @default(uuid())
+  teacherId      String
+  teacher        TeacherProfile @relation(fields: [teacherId], references: [userId], onDelete: Cascade)
+  mode           ServiceMode
+  title          String
+  description    String?        @db.Text
+  subjectSlug    String?
+  rateCents      Int
+  sessionMinutes Int            @default(60)
+  city           String?
+  inPersonArea   String?
+  onlinePlatform String?
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  bookings Booking[]
+
+  @@index([teacherId, mode, isActive])
+  @@index([subjectSlug, mode])
+}
+
+model TeacherAvailability {
+  id           String         @id @default(uuid())
+  teacherId    String
+  teacher      TeacherProfile @relation(fields: [teacherId], references: [userId], onDelete: Cascade)
+  weekday      Int
+  startMinute  Int
+  endMinute    Int
+  timezone     String         @default("Africa/Johannesburg")
+  isRecurring  Boolean        @default(true)
+  dateOverride DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([teacherId, weekday])
+  @@index([teacherId, dateOverride])
+}
+
+model Booking {
+  id              String       @id @default(uuid())
+  studentId       String
+  teacherId       String
+  serviceId       String
+  mode            ServiceMode
+  status          BookingStatus @default(pending_payment)
+  startsAt        DateTime
+  endsAt          DateTime
+  timezone        String
+  agreedRateCents Int
+  platformFeeCents Int
+  totalChargeCents Int
+  meetingLink     String?
+  inPersonVenue   String?
+  cancelReason    String?      @db.Text
+  cancelledAt     DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  student UserProfile    @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Cascade)
+  teacher TeacherProfile @relation("TeacherBookings", fields: [teacherId], references: [userId], onDelete: Cascade)
+  service TeacherService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  payments PaymentTransaction[]
+  review   Review?
+
+  @@index([studentId, status, startsAt])
+  @@index([teacherId, status, startsAt])
+  @@index([serviceId])
+}
+
+model PaymentTransaction {
+  id              String        @id @default(uuid())
+  bookingId       String?
+  payerId         String
+  teacherId       String?
+  type            PaymentType
+  status          PaymentStatus @default(initiated)
+  provider        String
+  providerRef     String?       @unique
+  amountCents     Int
+  currency        String        @default("ZAR")
+  platformFeeCents Int          @default(0)
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  booking Booking?    @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  payer   UserProfile @relation("PayerPayments", fields: [payerId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, type])
+  @@index([payerId, createdAt])
+  @@index([teacherId, createdAt])
+}
+
+model Payout {
+  id          String       @id @default(uuid())
+  teacherId   String
+  status      PayoutStatus @default(pending)
+  amountCents Int
+  currency    String       @default("ZAR")
+  providerRef String?      @unique
+  periodStart DateTime
+  periodEnd   DateTime
+  paidAt      DateTime?
+  failureReason String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  teacher TeacherProfile @relation(fields: [teacherId], references: [userId], onDelete: Cascade)
+
+  @@index([teacherId, status, createdAt])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  bookingId String   @unique
+  studentId String
+  teacherId String
+  rating    Int
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  booking Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  student UserProfile   @relation("StudentReviews", fields: [studentId], references: [id], onDelete: Cascade)
+  teacher TeacherProfile @relation(fields: [teacherId], references: [userId], onDelete: Cascade)
+
+  @@index([teacherId, createdAt])
+}

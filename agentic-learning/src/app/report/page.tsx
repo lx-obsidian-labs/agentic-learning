@@ -212,83 +212,176 @@ export default function IntelligenceReportPage() {
 <html>
 <head>
   <title>Student Intelligence Report - Agentic Learning</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; color: #1a1a1a; }
-    .header { text-align: center; padding: 30px 0; border-bottom: 3px solid #3b82f6; margin-bottom: 30px; }
-    .header h1 { font-size: 28px; color: #111; margin-bottom: 10px; }
-    .header p { color: #666; }
-    .score-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 30px; }
-    .score-card h2 { font-size: 48px; margin-bottom: 10px; }
-    .score-card p { opacity: 0.9; }
-    .category { background: #f0f9ff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #3b82f6; }
-    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-    .grid-item { background: #f9fafb; padding: 15px; border-radius: 8px; }
-    .grid-item h4 { font-size: 12px; color: #666; text-transform: uppercase; }
-    .grid-item p { font-size: 24px; font-weight: bold; }
-    .strengths, .weaknesses { padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-    .strengths { background: #dcfce7; border-left: 4px solid #22c55e; }
-    .weaknesses { background: #fef3c7; border-left: 4px solid #f59e0b; }
-    .careers { background: #f3e8ff; padding: 20px; border-radius: 12px; border-left: 4px solid #a855f7; }
-    .career-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
-    .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
-    @media print { body { padding: 20px; } }
+    body { 
+      font-family: 'Inter', Arial, sans-serif; 
+      padding: 40px; 
+      max-width: 210mm; 
+      margin: 0 auto; 
+      color: #1a1a1a; 
+      background: white;
+    }
+    .page { 
+      page-break-after: always; 
+      min-height: 297mm;
+    }
+    .header { 
+      text-align: center; 
+      padding: 25px 0; 
+      border-bottom: 3px solid #3b82f6; 
+      margin-bottom: 25px; 
+    }
+    .header h1 { font-size: 24px; color: #111; margin-bottom: 8px; }
+    .header .subtitle { color: #666; font-size: 14px; }
+    .header .date { color: #999; font-size: 12px; margin-top: 5px; }
+    .score-card { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      color: white; 
+      padding: 25px; 
+      border-radius: 12px; 
+      text-align: center; 
+      margin-bottom: 25px; 
+    }
+    .score-card h2 { font-size: 42px; margin-bottom: 8px; }
+    .score-card .label { opacity: 0.9; font-size: 14px; }
+    .score-card .category { margin-top: 8px; font-size: 16px; font-weight: 600; }
+    .section { margin-bottom: 20px; }
+    .section-title { 
+      background: #f0f9ff; 
+      padding: 12px 15px; 
+      border-radius: 8px; 
+      margin-bottom: 15px; 
+      border-left: 4px solid #3b82f6;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .grid-item { background: #f9fafb; padding: 12px; border-radius: 6px; }
+    .grid-item h4 { font-size: 10px; color: #666; text-transform: uppercase; margin-bottom: 4px; }
+    .grid-item p { font-size: 20px; font-weight: bold; }
+    .grid-item .type { font-size: 10px; color: #999; }
+    .strengths { background: #dcfce7; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #22c55e; }
+    .weaknesses { background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #f59e0b; }
+    .careers { background: #f3e8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #a855f7; }
+    .career-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-size: 12px; }
+    .career-item:last-child { border-bottom: none; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+    .metric { background: #f9fafb; padding: 12px; border-radius: 6px; text-align: center; }
+    .metric .value { font-size: 18px; font-weight: bold; }
+    .metric .label { font-size: 10px; color: #666; }
+    .footer { 
+      margin-top: 30px; 
+      padding-top: 15px; 
+      border-top: 1px solid #e5e7eb; 
+      text-align: center; 
+      color: #666; 
+      font-size: 10px; 
+    }
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      color: #ccc;
+      font-size: 10px;
+    }
+    @media print { 
+      body { padding: 0; }
+      .page { min-height: 100vh; }
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>🧠 Cognitive Intelligence Report</h1>
-    <p>Generated by Agentic Learning • ${new Date().toLocaleDateString()}</p>
-  </div>
-  
-  <div class="score-card">
-    <h2>${intelligenceScores.overall}</h2>
-    <p>Overall Cognitive Score</p>
-    <p style="margin-top: 10px; font-size: 18px;">${getIQCategory(intelligenceScores.overall).label}</p>
-  </div>
-  
-  <div class="category">
-    <h3 style="margin-bottom: 10px;">📊 Score Breakdown</h3>
-    <div class="grid">
-      <div class="grid-item"><h4>Logical-Mathematical</h4><p>${intelligenceScores.logicalMathematical}</p></div>
-      <div class="grid-item"><h4>Linguistic</h4><p>${intelligenceScores.linguistic}</p></div>
-      <div class="grid-item"><h4>Spatial</h4><p>${intelligenceScores.spatial}</p></div>
-      <div class="grid-item"><h4>Interpersonal</h4><p>${intelligenceScores.interpersonal}</p></div>
-      <div class="grid-item"><h4>Memory</h4><p>${intelligenceScores.memory}</p></div>
-      <div class="grid-item"><h4>Processing Speed</h4><p>${intelligenceScores.processingSpeed}</p></div>
+  <div class="page">
+    <div class="header">
+      <h1>🧠 Cognitive Intelligence Report</h1>
+      <p class="subtitle">Agentic Learning - AI-Powered Education Platform</p>
+      <p class="date">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
     </div>
-  </div>
-  
-  <div class="strengths">
-    <h3 style="margin-bottom: 10px;">💪 Strengths</h3>
-    <p>${progress.analytics.strongestTopic || 'Mathematics & Logic'} - ${getIntelligenceType(intelligenceScores.logicalMathematical)}</p>
-  </div>
-  
-  <div class="weaknesses">
-    <h3 style="margin-bottom: 10px;">🎯 Areas for Development</h3>
-    <p>${progress.analytics.weakestTopic || 'Continue learning to identify'}</p>
-  </div>
-  
-  <div class="careers">
-    <h3 style="margin-bottom: 15px;">🚀 Recommended Career Paths</h3>
-    ${careerPaths.slice(0, 3).map(c => `
-      <div class="career-item">
-        <span>${c.icon} ${c.title}</span>
-        <strong>${c.matchPercentage}% Match</strong>
+    
+    <div class="score-card">
+      <h2>${intelligenceScores.overall}</h2>
+      <p class="label">Overall Cognitive Score</p>
+      <p class="category">${getIQCategory(intelligenceScores.overall).label} - ${getIQCategory(intelligenceScores.overall).description}</p>
+    </div>
+    
+    <div class="metrics">
+      <div class="metric"><div class="value">${progress.quizScores.length}</div><div class="label">Quizzes</div></div>
+      <div class="metric"><div class="value">${progress.analytics.averageQuizScore}%</div><div class="label">Avg Score</div></div>
+      <div class="metric"><div class="value">${(progress.analytics.masteredTopics || []).length}</div><div class="label">Topics Mastered</div></div>
+      <div class="metric"><div class="value">${progress.streak}</div><div class="label">Day Streak</div></div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">📊 Multi-Intelligence Score Breakdown</div>
+      <div class="grid">
+        <div class="grid-item">
+          <h4>Logical-Mathematical</h4>
+          <p>${intelligenceScores.logicalMathematical}</p>
+          <span class="type">${getIntelligenceType(intelligenceScores.logicalMathematical)}</span>
+        </div>
+        <div class="grid-item">
+          <h4>Linguistic</h4>
+          <p>${intelligenceScores.linguistic}</p>
+          <span class="type">${getIntelligenceType(intelligenceScores.linguistic)}</span>
+        </div>
+        <div class="grid-item">
+          <h4>Spatial</h4>
+          <p>${intelligenceScores.spatial}</p>
+          <span class="type">${getIntelligenceType(intelligenceScores.spatial)}</span>
+        </div>
+        <div class="grid-item">
+          <h4>Interpersonal</h4>
+          <p>${intelligenceScores.interpersonal}</p>
+          <span class="type">${getIntelligenceType(intelligenceScores.interpersonal)}</span>
+        </div>
+        <div class="grid-item">
+          <h4>Memory</h4>
+          <p>${intelligenceScores.memory}</p>
+          <span class="type">${getIntelligenceType(intelligenceScores.memory)}</span>
+        </div>
+        <div class="grid-item">
+          <h4>Processing Speed</h4>
+          <p>${intelligenceScores.processingSpeed}</p>
+          <span class="type">${getIntelligenceType(intelligenceScores.processingSpeed)}</span>
+        </div>
       </div>
-    `).join('')}
-  </div>
-  
-  <div class="footer">
-    <p>This report is generated based on learning analytics and quiz performance.</p>
-    <p>For educational purposes only. Not a clinical assessment.</p>
-    <p>Agentic Learning - Empowering Students Worldwide</p>
+    </div>
+    
+    <div class="strengths">
+      <div class="section-title" style="background:transparent; padding:0; margin-bottom:8px;">💪 Strengths</div>
+      <p><strong>${progress.analytics.strongestTopic || 'Mathematics & Logic'}</strong> - ${getIntelligenceType(intelligenceScores.logicalMathematical)}</p>
+    </div>
+    
+    <div class="weaknesses">
+      <div class="section-title" style="background:transparent; padding:0; margin-bottom:8px;">🎯 Areas for Development</div>
+      <p><strong>${progress.analytics.weakestTopic || 'Continue learning to identify'}</strong></p>
+    </div>
+    
+    <div class="careers">
+      <div class="section-title" style="background:transparent; padding:0; margin-bottom:12px;">🚀 Recommended Career Paths</div>
+      ${careerPaths.slice(0, 4).map(c => `
+        <div class="career-item">
+          <span>${c.icon} <strong>${c.title}</strong></span>
+          <span>${c.matchPercentage}% Match</span>
+        </div>
+      `).join('')}
+    </div>
+    
+    <div class="footer">
+      <p><strong>Agentic Learning</strong> - Empowering Students Worldwide</p>
+      <p>This report is generated based on learning analytics and quiz performance.</p>
+      <p>For educational purposes only. Not a clinical assessment.</p>
+    </div>
+    
+    <div class="watermark">Agentic Learning Report</div>
   </div>
 </body>
 </html>
     `;
-    
+
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(reportContent);
@@ -513,7 +606,7 @@ export default function IntelligenceReportPage() {
               <p className="text-sm text-gray-600 mb-4">
                 This cognitive assessment is based on learning analytics, quiz performance, 
                 and engagement patterns. It provides insight into various cognitive abilities 
-                based on Howard Gardner's Multiple Intelligences theory.
+                based on Howard Gardner&apos;s Multiple Intelligences theory.
               </p>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Logical-Mathematical: Problem-solving abilities</li>

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { subjects, courses } from '@/data/courses';
+import type { CourseCardDTO, SubjectDTO } from '@/lib/catalogTypes';
 import { Brain, CalendarDays, ChevronLeft, ChevronRight, Target, Clock, CheckCircle2 } from 'lucide-react';
 
 type ThemePreference = 'system' | 'light' | 'dark';
@@ -54,6 +54,10 @@ function saveOnboarding(data: OnboardingData) {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const [catalogSubjects, setCatalogSubjects] = useState<SubjectDTO[]>([]);
+  const [catalogCourses, setCatalogCourses] = useState<CourseCardDTO[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
 
   const [step, setStep] = useState(0);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
@@ -72,11 +76,46 @@ export default function OnboardingPage() {
     setThemePreference(existing.themePreference);
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const load = async () => {
+      try {
+        setCatalogLoading(true);
+        setCatalogError(null);
+
+        const [subjectsRes, coursesRes] = await Promise.all([
+          fetch('/api/catalog/subjects', { signal: controller.signal }),
+          fetch('/api/catalog/courses', { signal: controller.signal }),
+        ]);
+
+        if (!subjectsRes.ok) throw new Error('Failed to load subjects');
+        if (!coursesRes.ok) throw new Error('Failed to load courses');
+
+        const [subjectsData, coursesData] = (await Promise.all([
+          subjectsRes.json(),
+          coursesRes.json(),
+        ])) as [SubjectDTO[], CourseCardDTO[]];
+
+        setCatalogSubjects(subjectsData);
+        setCatalogCourses(coursesData);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setCatalogError(err instanceof Error ? err.message : 'Failed to load catalog');
+      } finally {
+        if (!controller.signal.aborted) setCatalogLoading(false);
+      }
+    };
+
+    void load();
+    return () => controller.abort();
+  }, []);
+
   const recommendedCourse = useMemo(() => {
     const preferredSubject = selectedSubjects[0];
-    const match = courses.find(c => (preferredSubject ? c.subject === preferredSubject : true));
-    return match ?? courses[0] ?? null;
-  }, [selectedSubjects]);
+    const match = catalogCourses.find(c => (preferredSubject ? c.subjectId === preferredSubject : true));
+    return match ?? catalogCourses[0] ?? null;
+  }, [selectedSubjects, catalogCourses]);
 
   const canContinue = useMemo(() => {
     if (step === 1) return selectedSubjects.length > 0;
@@ -161,7 +200,7 @@ export default function OnboardingPage() {
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-4 mb-3">Learn smarter, starting today</h2>
                   <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Choose your subjects and goals. We'll generate a simple plan and take you straight to the best first lesson.
+                    Choose your subjects and goals. We&apos;ll generate a simple plan and take you straight to the best first lesson.
                   </p>
                   <div className="mt-6 flex flex-wrap gap-3">
                     <button
@@ -180,7 +219,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
                 <div className="bg-gradient-to-br from-blue-600 to-purple-700 rounded-2xl p-6 text-white">
-                  <p className="text-blue-100 text-sm mb-2">What you'll get</p>
+                  <p className="text-blue-100 text-sm mb-2">What you&apos;ll get</p>
                   <ul className="space-y-3">
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-green-300 mt-0.5" />
@@ -212,7 +251,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {subjects.map(subject => {
+                  {catalogSubjects.map(subject => {
                     const isSelected = selectedSubjects.includes(subject.id);
                     return (
                       <button
@@ -241,11 +280,18 @@ export default function OnboardingPage() {
                             {subject.name.slice(0, 1)}
                           </div>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">{subject.courses} courses</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">{subject.courseCount} courses</p>
                       </button>
                     );
                   })}
                 </div>
+
+                {catalogLoading && catalogSubjects.length === 0 && (
+                  <p className="text-sm text-gray-500 mt-4">Loading subjects...</p>
+                )}
+                {catalogError && (
+                  <p className="text-sm text-red-600 mt-4">{catalogError}</p>
+                )}
 
                 {!canContinue && (
                   <p className="text-sm text-red-600 mt-4">Select at least one subject to continue.</p>
@@ -261,7 +307,7 @@ export default function OnboardingPage() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">Set your schedule</h2>
-                    <p className="text-gray-500 text-sm">We'll use this to shape your weekly plan.</p>
+                    <p className="text-gray-500 text-sm">We&apos;ll use this to shape your weekly plan.</p>
                   </div>
                 </div>
 
@@ -356,7 +402,7 @@ export default function OnboardingPage() {
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">You're ready</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">You&apos;re ready</h2>
                     <p className="text-gray-500 text-sm">Here’s a simple plan to start strong today.</p>
                   </div>
                 </div>

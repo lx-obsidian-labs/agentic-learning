@@ -10,10 +10,15 @@ export interface UserProgress {
   streak: number;
   lastStudyDate: string;
   totalTimeSpent: number;
+  totalWatchTime: number;
+  videosWatched: number;
+  quizzesTaken: number;
   badges: string[];
   quizScores: { lessonId: string; score: number; total: number; timestamp: number }[];
   bookmarks: string[];
   dailyChallenges: { id: string; completed: boolean; progress: number; target: number }[];
+  region: string;
+  grade: number;
   settings: {
     darkMode: boolean;
     notifications: boolean;
@@ -21,6 +26,7 @@ export interface UserProgress {
     playbackSpeed: number;
   };
   analytics: StudentAnalytics;
+  lectureRatings: Record<string, { rating: number; review: string; timestamp: number }>;
 }
 
 export interface StudentAnalytics {
@@ -67,14 +73,20 @@ const defaultProgress: UserProgress = {
   streak: 0,
   lastStudyDate: '',
   totalTimeSpent: 0,
+  totalWatchTime: 0,
+  videosWatched: 0,
+  quizzesTaken: 0,
   badges: [],
   quizScores: [],
   bookmarks: [],
+  region: 'gauteng',
+  grade: 12,
   dailyChallenges: [
     { id: 'daily_lesson', completed: false, progress: 0, target: 1 },
     { id: 'daily_quiz', completed: false, progress: 0, target: 1 },
     { id: 'daily_study', completed: false, progress: 0, target: 15 },
     { id: 'daily_repeat', completed: false, progress: 0, target: 3 },
+    { id: 'daily_watch', completed: false, progress: 0, target: 30 },
   ],
   settings: {
     darkMode: false,
@@ -82,7 +94,8 @@ const defaultProgress: UserProgress = {
     autoplay: true,
     playbackSpeed: 1
   },
-  analytics: defaultAnalytics
+  analytics: defaultAnalytics,
+  lectureRatings: {}
 };
 
 function calculateLevel(xp: number): number {
@@ -210,6 +223,9 @@ export function useProgress() {
         }
         
         if (!parsed.bookmarks) parsed.bookmarks = [];
+        if (!parsed.dailyChallenges) parsed.dailyChallenges = defaultProgress.dailyChallenges;
+        if (!parsed.region) parsed.region = defaultProgress.region;
+        if (!parsed.grade) parsed.grade = defaultProgress.grade;
         if (!parsed.settings) {
           parsed.settings = {
             darkMode: false,
@@ -234,7 +250,7 @@ export function useProgress() {
     }
   }, [progress, isLoaded]);
 
-  const completeLesson = (lessonId: string, courseId: string) => {
+  const completeLesson = (lessonId: string, _courseId: string) => {
     if (progress.completedLessons.includes(lessonId)) return;
     
     const today = new Date().toISOString().split('T')[0];
@@ -258,15 +274,17 @@ export function useProgress() {
     const newLevel = calculateLevel(newXp);
     const newBadges = [...progress.badges];
     
-    const dailyChallenges = [...progress.dailyChallenges].map(c => {
-      if (c.id === 'daily_lesson' && !c.completed) {
-        return { ...c, progress: c.progress + 1, completed: c.progress + 1 >= c.target };
-      }
-      if (c.id === 'daily_study' && !c.completed) {
-        return { ...c, progress: c.progress + 5, completed: c.progress + 5 >= c.target };
-      }
-      return c;
-    });
+    const dailyChallenges = progress.dailyChallenges 
+      ? [...progress.dailyChallenges].map(c => {
+          if (c.id === 'daily_lesson' && !c.completed) {
+            return { ...c, progress: c.progress + 1, completed: c.progress + 1 >= c.target };
+          }
+          if (c.id === 'daily_study' && !c.completed) {
+            return { ...c, progress: c.progress + 5, completed: c.progress + 5 >= c.target };
+          }
+          return c;
+        })
+      : [];
     
     if (newPoints >= 50 && !newBadges.includes('first_lesson')) {
       newBadges.push('first_lesson');
@@ -346,11 +364,11 @@ export function useProgress() {
     const weakest = sortedTopics[sortedTopics.length - 1]?.[0] || '';
     
     const mastered = Object.entries(topicPerformance)
-      .filter(([_, score]) => score >= 80)
+      .filter(([, score]) => score >= 80)
       .map(([topic]) => topic);
     
     const needsReview = Object.entries(topicPerformance)
-      .filter(([_, score]) => score < 60)
+      .filter(([, score]) => score < 60)
       .map(([topic]) => topic);
     
     const spacedData = updateSpacedRepetition(
@@ -424,6 +442,55 @@ export function useProgress() {
     });
   };
 
+  const addWatchTime = (secondsWatched: number, lessonId: string) => {
+    const minutesWatched = Math.floor(secondsWatched / 60);
+    if (minutesWatched < 1) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const weeklyProgress = [...progress.analytics.weeklyProgress];
+    const todayEntry = weeklyProgress.find(w => w.date === today);
+    
+    if (todayEntry) {
+      todayEntry.minutes += minutesWatched;
+    } else {
+      weeklyProgress.push({ date: today, minutes: minutesWatched, score: 0 });
+    }
+    
+    const isNewVideo = !progress.completedLessons.includes(lessonId + '_watched');
+
+    const dailyChallenges = progress.dailyChallenges
+      ? [...progress.dailyChallenges].map(c => {
+          if (c.id === 'daily_watch' && !c.completed) {
+            const newProgress = c.progress + minutesWatched;
+            return { ...c, progress: newProgress, completed: newProgress >= c.target };
+          }
+          return c;
+        })
+      : [];
+    
+    setProgress({
+      ...progress,
+      totalWatchTime: progress.totalWatchTime + minutesWatched,
+      videosWatched: isNewVideo ? progress.videosWatched + 1 : progress.videosWatched,
+      analytics: {
+        ...progress.analytics,
+        totalStudyTime: progress.analytics.totalStudyTime + minutesWatched,
+        weeklyProgress: weeklyProgress.slice(-7),
+      },
+      completedLessons: isNewVideo ? [...progress.completedLessons, lessonId + '_watched'] : progress.completedLessons,
+      dailyChallenges
+    });
+  };
+
+  const getWatchTimeFormatted = () => {
+    const hours = Math.floor(progress.totalWatchTime / 60);
+    const minutes = progress.totalWatchTime % 60;
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
   const isLessonCompleted = (lessonId: string) => {
     return progress.completedLessons.includes(lessonId);
   };
@@ -444,7 +511,7 @@ export function useProgress() {
     return percentage >= 80;
   };
 
-  const getQuizForDifficulty = (lessonTitle: string): { difficulty: number; count: number } => {
+  const getQuizForDifficulty = (_lessonTitle: string): { difficulty: number; count: number } => {
     const difficulty = progress.analytics.adaptiveDifficulty;
     
     switch (difficulty) {
@@ -528,6 +595,14 @@ export function useProgress() {
     });
   };
 
+  const updateRegionAndGrade = (region: string, grade: number) => {
+    setProgress({
+      ...progress,
+      region,
+      grade
+    });
+  };
+
   const getLevelProgress = useCallback(() => {
     const currentLevelXp = progress.level === 1 ? 0 : getXpForNextLevel(progress.level - 1);
     const nextLevelXp = getXpForNextLevel(progress.level);
@@ -557,12 +632,40 @@ export function useProgress() {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const rateLesson = useCallback((lessonId: string, rating: number, review: string = '') => {
+    if (rating < 1 || rating > 5) return;
+    
+    setProgress(prev => ({
+      ...prev,
+      lectureRatings: {
+        ...prev.lectureRatings,
+        [lessonId]: { rating, review, timestamp: Date.now() }
+      }
+    }));
+  }, []);
+
+  const getLessonRating = useCallback((lessonId: string): { average: number; count: number } | null => {
+    const ratings = Object.values(progress.lectureRatings);
+    if (ratings.length === 0) return null;
+    
+    const average = Math.round(ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length);
+    return { average, count: ratings.length };
+  }, [progress.lectureRatings]);
+
+  const getUserReview = useCallback((lessonId: string): { rating: number; review: string } | null => {
+    const userRating = progress.lectureRatings[lessonId];
+    if (!userRating) return null;
+    return { rating: userRating.rating, review: userRating.review };
+  }, [progress.lectureRatings]);
+
   return {
     progress,
     isLoaded,
     completeLesson,
     addQuizScore,
     addTimeSpent,
+    addWatchTime,
+    getWatchTimeFormatted,
     isLessonCompleted,
     getQuizScore,
     isLessonUnlocked,
@@ -574,13 +677,17 @@ export function useProgress() {
     toggleBookmark,
     isBookmarked,
     updateSettings,
+    updateRegionAndGrade,
     getLevelProgress,
     getLevelTitleLabel,
     getDailyChallenges,
-    getLeaderboardPosition,
-    resetProgress
-  };
-}
+     getLeaderboardPosition,
+     resetProgress,
+     rateLesson,
+     getLessonRating,
+     getUserReview
+   };
+ }
 
 export const badgeInfo: { id: string; name: string; icon: string; description: string; color: string; requirement: string }[] = [
   { id: 'first_lesson', name: 'First Step', icon: '🎯', description: 'Complete your first lesson', color: '#3B82F6', requirement: 'Complete 1 lesson' },

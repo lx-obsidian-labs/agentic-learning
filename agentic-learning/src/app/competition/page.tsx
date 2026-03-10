@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useProgress } from '@/hooks/useProgress';
 import { 
@@ -20,15 +20,80 @@ import {
   BookOpen,
   Clock,
   CheckCircle,
-  Lock
+  Lock,
+  Globe,
+  MapPin,
+  Timer,
+  Bell,
+  BellOff
 } from 'lucide-react';
 import { competitions, mockCompetitionLeaderboard, getActiveCompetition, CompetitionEntry } from '@/data/competitions';
+
+function CountdownTimer({ endDate }: { endDate: string }) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = new Date(endDate).getTime() - new Date().getTime();
+      
+      if (difference > 0) {
+        return {
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        };
+      }
+      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [endDate]);
+
+  return (
+    <div className="flex gap-3">
+      {[
+        { value: timeLeft.days, label: 'Days' },
+        { value: timeLeft.hours, label: 'Hours' },
+        { value: timeLeft.minutes, label: 'Mins' },
+        { value: timeLeft.seconds, label: 'Secs' }
+      ].map((item, idx) => (
+        <div key={idx} className="text-center">
+          <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+            <span className="text-2xl font-bold text-white">{item.value.toString().padStart(2, '0')}</span>
+          </div>
+          <p className="text-xs text-white/60 mt-1">{item.label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function CompetitionPage() {
   const { progress } = useProgress();
   const [selectedYear, setSelectedYear] = useState<string>('matric-2026');
+  const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const competition = competitions.find(c => c.id === selectedYear) || getActiveCompetition();
   
+  const regions = [
+    { id: 'all', name: 'National', icon: Globe },
+    { id: 'gauteng', name: 'Gauteng', icon: MapPin },
+    { id: 'western-cape', name: 'Western Cape', icon: MapPin },
+    { id: 'kzn', name: 'KwaZulu-Natal', icon: MapPin },
+    { id: 'eastern-cape', name: 'Eastern Cape', icon: MapPin },
+    { id: 'limpopo', name: 'Limpopo', icon: MapPin },
+    { id: 'mpumalanga', name: 'Mpumalanga', icon: MapPin },
+    { id: 'north-west', name: 'North West', icon: MapPin },
+    { id: 'free-state', name: 'Free State', icon: MapPin },
+    { id: 'northern-cape', name: 'Northern Cape', icon: MapPin },
+  ];
+
   const userEntry: CompetitionEntry = {
     id: 'you',
     studentId: 'you',
@@ -122,6 +187,16 @@ export default function CompetitionPage() {
                 
                 <h2 className="text-4xl font-bold mb-4">{competition.name}</h2>
                 <p className="text-yellow-100 text-lg mb-6 max-w-2xl">{competition.description}</p>
+
+                {competition.status === 'active' && (
+                  <div className="mb-6">
+                    <p className="text-white/80 mb-3 flex items-center gap-2">
+                      <Timer className="w-5 h-5" />
+                      Time Remaining
+                    </p>
+                    <CountdownTimer endDate={competition.endDate} />
+                  </div>
+                )}
                 
                 <div className="flex flex-wrap gap-6">
                   <div className="flex items-center gap-2">
@@ -138,6 +213,49 @@ export default function CompetitionPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+                    <MapPin className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Regional Qualification</h3>
+                    <p className="text-blue-100">Top 10 per region qualify for finals</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold">10</p>
+                  <p className="text-blue-100">Qualifiers per region</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Globe className="w-5 h-5 text-white/70" />
+                <h3 className="font-bold text-white">Select Your Region</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {regions.map((region) => (
+                  <button
+                    key={region.id}
+                    onClick={() => setSelectedRegion(region.id)}
+                    className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                      selectedRegion === region.id
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    }`}
+                  >
+                    {region.name}
+                  </button>
+                ))}
+              </div>
+              <p className="text-white/60 text-sm mt-3">
+                Your region affects qualification for the regional leaderboard. You can change it in Settings.
+              </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">

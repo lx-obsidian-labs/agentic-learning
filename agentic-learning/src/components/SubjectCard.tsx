@@ -1,11 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Subject } from '@/data/courses';
+import type { SubjectDTO } from '@/lib/catalogTypes';
 
 interface SubjectCardProps {
-  subject: Subject;
-  index: number;
+  subject: SubjectDTO;
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -94,11 +93,42 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
         <path d="M14 18h6" />
       </svg>
     );
+  },
+  Briefcase: function Briefcase({ className }: { className?: string }) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="7" width="18" height="14" rx="2" />
+        <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+        <path d="M3 13h18" />
+      </svg>
+    );
+  },
+  Landmark: function Landmark({ className }: { className?: string }) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 3l9 5H3l9-5z" />
+        <path d="M4 10v10" />
+        <path d="M8 10v10" />
+        <path d="M12 10v10" />
+        <path d="M16 10v10" />
+        <path d="M20 10v10" />
+        <path d="M3 21h18" />
+      </svg>
+    );
+  },
+  Laptop: function Laptop({ className }: { className?: string }) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="4" width="18" height="12" rx="2" />
+        <path d="M2 20h20" />
+        <path d="M6 20l1-4h10l1 4" />
+      </svg>
+    );
   }
 };
 
-export default function SubjectCard({ subject, index }: SubjectCardProps) {
-  const IconComponent = iconMap[subject.icon] || iconMap.Calculator;
+export default function SubjectCard({ subject }: SubjectCardProps) {
+  const IconComponent = iconMap[subject.iconKey] || iconMap.Calculator;
   
   return (
     <Link href={`/subject/${subject.id}`}>
@@ -124,7 +154,7 @@ export default function SubjectCard({ subject, index }: SubjectCardProps) {
             className="text-xs font-medium px-2 py-1 rounded-full"
             style={{ backgroundColor: subject.color, color: 'white' }}
           >
-            {subject.courses} Courses
+            {subject.courseCount} Courses
           </span>
         </div>
         

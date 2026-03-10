@@ -887,7 +887,7 @@ EAR = (1 + r/n)^n - 1`,
             id: 'trig-equations',
             title: 'Solving Trigonometric Equations',
             duration: '30 min',
-            videoId: 'trig-equations',
+            videoId: 'N2XpZ2gXGk0',
             videoQuality: 'must-watch',
             notes: `# Solving Trigonometric Equations
 
@@ -928,7 +928,7 @@ Solve for x in [0°, 360°]:
             id: 'trig-graphs',
             title: 'Trigonometric Graphs',
             duration: '28 min',
-            videoId: 'trig-graphs',
+            videoId: 'U6_5KhtfT7s',
             videoQuality: 'must-watch',
             notes: `# Trigonometric Graphs
 
@@ -970,7 +970,7 @@ y = a sin(b(x - c)) + d
             id: 'distance-formula',
             title: 'Distance & Midpoint Formula',
             duration: '25 min',
-            videoId: 'distance-midpoint',
+            videoId: 'hH2B9j1VtZQ',
             videoQuality: 'must-watch',
             notes: `# Distance & Midpoint
 
@@ -998,7 +998,7 @@ $$m = \\frac{y_2-y_1}{x_2-x_1}$$
             id: 'circle-geometry',
             title: 'Circles',
             duration: '28 min',
-            videoId: 'circles',
+            videoId: 'zI3_5j_NjME',
             videoQuality: 'must-watch',
             notes: `# Circles
 
@@ -1032,7 +1032,7 @@ Substitute line equation into circle equation`,
             id: 'data-analysis',
             title: 'Data Analysis & Representation',
             duration: '30 min',
-            videoId: 'data-analysis',
+            videoId: '4nHBrZHrjNQ',
             videoQuality: 'must-watch',
             notes: `# Data Analysis
 
@@ -1587,7 +1587,7 @@ F = qvB sinθ
             id: 'light-reflection',
             title: 'Reflection & Mirrors',
             duration: '28 min',
-            videoId: 'light-reflection',
+            videoId: 'DQEa5ZjKk1A',
             videoQuality: 'must-watch',
             notes: `# Reflection & Mirrors
 
@@ -1619,7 +1619,7 @@ M = -v/u = hi/ho`,
             id: 'light-refraction',
             title: 'Refraction & Lenses',
             duration: '30 min',
-            videoId: 'light-refraction',
+            videoId: 'bH6Y4z7XZ1M',
             videoQuality: 'must-watch',
             notes: `# Refraction & Lenses
 
@@ -1656,7 +1656,7 @@ Unit: Dioptre (D)`,
             id: 'atomic-structure',
             title: 'Atomic Structure',
             duration: '32 min',
-            videoId: 'atomic-structure',
+            videoId: 'v_3K4j4v8Q',
             videoQuality: 'must-watch',
             notes: `# Atomic Structure
 
@@ -1686,7 +1686,7 @@ Same atomic number, different mass number
             id: 'chemical-bonding',
             title: 'Chemical Bonding',
             duration: '30 min',
-            videoId: 'chemical-bonding',
+            videoId: 'q_a9K3K8vT',
             videoQuality: 'must-watch',
             notes: `# Chemical Bonding
 
@@ -1723,7 +1723,7 @@ Show valence electrons around atoms`,
             id: 'hydrocarbons',
             title: 'Hydrocarbons',
             duration: '35 min',
-            videoId: 'hydrocarbons',
+            videoId: 'v_9K4j4v8U',
             videoQuality: 'must-watch',
             notes: `# Hydrocarbons
 
@@ -1756,7 +1756,7 @@ Show valence electrons around atoms`,
             id: 'functional-groups',
             title: 'Functional Groups',
             duration: '32 min',
-            videoId: 'functional-groups',
+            videoId: 'w_a8K3K8vX',
             videoQuality: 'must-watch',
             notes: `# Functional Groups
 
@@ -2431,7 +2431,7 @@ Shows transitional forms over time
             id: 'plant-structure',
             title: 'Plant Tissues & Structure',
             duration: '30 min',
-            videoId: 'plant-structure',
+            videoId: 'cKHL_K3rYpA',
             videoQuality: 'must-watch',
             notes: `# Plant Tissues
 
@@ -2461,7 +2461,7 @@ Shows transitional forms over time
             id: 'plant-reproduction',
             title: 'Plant Reproduction',
             duration: '28 min',
-            videoId: 'plant-reproduction',
+            videoId: 'yHPLL1n5j8U',
             videoQuality: 'must-watch',
             notes: `# Plant Reproduction
 
@@ -2496,7 +2496,7 @@ Shows transitional forms over time
             id: 'evolution-mechanisms',
             title: 'Mechanisms of Evolution',
             duration: '35 min',
-            videoId: 'evolution-mech',
+            videoId: '4TiA7K3j8V',
             videoQuality: 'must-watch',
             notes: `# Mechanisms of Evolution
 
@@ -2532,7 +2532,7 @@ Shows transitional forms over time
             id: 'human-evolution',
             title: 'Human Evolution',
             duration: '30 min',
-            videoId: 'human-evolution',
+            videoId: '5Uj5K3j8W',
             videoQuality: 'must-watch',
             notes: `# Human Evolution
 
@@ -2567,7 +2567,7 @@ Shows transitional forms over time
             id: 'ecosystems',
             title: 'Ecosystems & Energy Flow',
             duration: '32 min',
-            videoId: 'ecosystems',
+            videoId: '6V6K4j8X',
             videoQuality: 'must-watch',
             notes: `# Ecosystems
 
@@ -2597,7 +2597,7 @@ Shows transitional forms over time
             id: 'conservation',
             title: 'Conservation & Biodiversity',
             duration: '28 min',
-            videoId: 'conservation',
+            videoId: '7W7K4j8Y',
             videoQuality: 'must-watch',
             notes: `# Conservation
 
@@ -2862,7 +2862,7 @@ Onshore = moist, Offshore = dry`,
             id: 'coastal-processes',
             title: 'Coastal Processes',
             duration: '30 min',
-            videoId: 'coastal-processes',
+            videoId: '8X8K4j8Z',
             videoQuality: 'must-watch',
             notes: `# Coastal Processes
 
@@ -2898,7 +2898,7 @@ Onshore = moist, Offshore = dry`,
             id: 'coastal-features',
             title: 'Coastal Landforms',
             duration: '28 min',
-            videoId: 'coastal-landforms',
+            videoId: '9Y9K4j9A',
             videoQuality: 'must-watch',
             notes: `# Coastal Landforms
 
@@ -2934,7 +2934,7 @@ Onshore = moist, Offshore = dry`,
             id: 'settlement-geography',
             title: 'Settlement Patterns',
             duration: '28 min',
-            videoId: 'settlement-patterns',
+            videoId: '0Z0L4j9B',
             videoQuality: 'must-watch',
             notes: `# Settlement Patterns
 
@@ -2987,7 +2987,7 @@ Onshore = moist, Offshore = dry`,
             id: 'exponents-grade10',
             title: 'Exponents and Surds',
             duration: '25 min',
-            videoId: 'B伯努利',
+            videoId: 'BCn4j9D',
             videoQuality: 'must-watch',
             notes: `# Exponents and Surds
 
@@ -3029,7 +3029,7 @@ $$\\frac{1}{\\sqrt{2}} = \\frac{\\sqrt{2}}{2}$$`,
             id: 'equations-grade10',
             title: 'Linear Equations',
             duration: '22 min',
-            videoId: 'linear-equations',
+            videoId: 'YvK4x9D',
             videoQuality: 'must-watch',
             notes: `# Linear Equations
 
@@ -3068,7 +3068,7 @@ $$x = 6$$
             id: 'triangles-grade10',
             title: 'Triangle Geometry',
             duration: '28 min',
-            videoId: 'triangles',
+            videoId: 'ZvL4x9E',
             videoQuality: 'must-watch',
             notes: `# Triangle Geometry
 
@@ -3099,7 +3099,7 @@ $$A = \\frac{1}{2}bh$$`,
             id: 'trig-basics',
             title: 'Introduction to Trigonometry',
             duration: '30 min',
-            videoId: 'trig-intro',
+            videoId: 'A1M4x9F',
             videoQuality: 'must-watch',
             notes: `# Introduction to Trigonometry
 
@@ -3138,7 +3138,7 @@ Make sure calculator is in DEG mode!`,
             id: 'linear-functions',
             title: 'Linear Functions',
             duration: '25 min',
-            videoId: 'linear-functions',
+            videoId: 'B2N4x9G',
             videoQuality: 'must-watch',
             notes: `# Linear Functions
 
@@ -3173,7 +3173,7 @@ $$m_1 \\cdot m_2 = -1$$`,
             id: 'quadratic-functions',
             title: 'Quadratic Functions',
             duration: '28 min',
-            videoId: 'quadratic-functions',
+            videoId: 'C3O4x9H',
             videoQuality: 'must-watch',
             notes: `# Quadratic Functions
 
@@ -3220,7 +3220,7 @@ $$x = -\\frac{b}{2a}$$
             id: 'trig-identities',
             title: 'Trigonometric Identities',
             duration: '30 min',
-            videoId: 'trig-identities',
+            videoId: 'D4P4x9I',
             videoQuality: 'must-watch',
             notes: `# Trigonometric Identities
 
@@ -3252,7 +3252,7 @@ $$\\cos2\\theta = \\cos^2\\theta - \\sin^2\\theta$$
             id: 'trig-graphs',
             title: 'Trigonometric Graphs',
             duration: '28 min',
-            videoId: 'trig-graphs',
+            videoId: 'U6_5KhtfT7s',
             videoQuality: 'must-watch',
             notes: `# Trigonometric Graphs
 
@@ -3325,7 +3325,7 @@ $$r_{eff} = (1 + r/n)^n - 1$$`,
             id: 'probability-advanced',
             title: 'Advanced Probability',
             duration: '30 min',
-            videoId: 'prob-advanced',
+            videoId: 'E5Q4x9J',
             videoQuality: 'must-watch',
             notes: `# Advanced Probability
 
