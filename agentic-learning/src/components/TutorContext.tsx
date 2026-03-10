@@ -161,7 +161,7 @@ export function TutorProvider({ children }: { children: ReactNode }) {
         setError(errorMsg);
         addMessage('assistant', errorMsg);
       }
-    } catch (error) {
+    } catch {
       const errorMsg = 'Failed to connect. Please check your internet connection.';
       setError(errorMsg);
       addMessage('assistant', errorMsg);

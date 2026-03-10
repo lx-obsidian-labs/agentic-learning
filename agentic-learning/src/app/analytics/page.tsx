@@ -22,19 +22,11 @@ import {
 export default function AnalyticsPage() {
   const { progress, getLearningInsights, getTopicsForReview } = useProgress();
   const [activeTab, setActiveTab] = useState<'overview' | 'topics' | 'progress'>('overview');
-    const recommendedTopics = getRecommendedLessons() || [];
+  const tabs: Array<'overview' | 'topics' | 'progress'> = ['overview', 'topics', 'progress'];
   
   const analytics = progress.analytics;
   const insights = getLearningInsights();
   const reviewTopics: string[] = getTopicsForReview() || [];
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'advanced': return 'bg-green-100 text-green-700';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-700';
-      default: return 'bg-blue-100 text-blue-700';
-    }
-  };
 
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty) {

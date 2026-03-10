@@ -20,8 +20,6 @@ import {
   FlaskConical,
   Globe,
   Heart,
-  Check,
-  Plus,
 } from 'lucide-react';
 import { useProgress } from '@/hooks/useProgress';
 

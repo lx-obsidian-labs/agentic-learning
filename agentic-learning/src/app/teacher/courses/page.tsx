@@ -8,13 +8,11 @@ import {
   Trash2, 
   Edit3, 
   Save, 
-  X,
   BookOpen,
   Video,
   FileText,
   Target,
   Clock,
-  BarChart3,
   GripVertical,
   ChevronRight
 } from 'lucide-react';
@@ -50,7 +48,7 @@ const STORAGE_KEY = 'agentic-learning-teacher-courses';
 export default function TeacherCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [, setEditingCourse] = useState<Course | null>(null);
   const [newCourse, setNewCourse] = useState({
     title: '',
     subject: '',
@@ -444,7 +442,7 @@ export default function TeacherCoursesPage() {
                       <p className="text-gray-500 dark:text-gray-400 text-center py-4">No lessons yet. Add your first lesson above.</p>
                     ) : (
                       <div className="space-y-2">
-                        {course.lessons.map((lesson, idx) => (
+                        {course.lessons.map((lesson) => (
                           <div key={lesson.id} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">

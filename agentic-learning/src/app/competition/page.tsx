@@ -10,7 +10,6 @@ import {
   Crown,
   Star,
   Flame,
-  Zap,
   Target,
   Calendar,
   Gift,
@@ -23,9 +22,7 @@ import {
   Lock,
   Globe,
   MapPin,
-  Timer,
-  Bell,
-  BellOff
+  Timer
 } from 'lucide-react';
 import { competitions, mockCompetitionLeaderboard, getActiveCompetition, CompetitionEntry } from '@/data/competitions';
 

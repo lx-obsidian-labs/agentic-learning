@@ -19,32 +19,6 @@ interface SearchResult {
   snippet: string;
 }
 
-async function performWebSearch(query: string): Promise<SearchResult[]> {
-  const searchUrl = `https://api.exa.ai/search?query=${encodeURIComponent(query)}&num-results=5`;
-  
-  try {
-    const response = await fetch(searchUrl, {
-      headers: {
-        'x-api-key': process.env.EXA_API_KEY || '',
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error('Search failed');
-    }
-    
-    const data = await response.json();
-    return data.results?.map((r: { title: string; url: string; text: string }) => ({
-      title: r.title,
-      url: r.url,
-      snippet: r.text?.substring(0, 200) || '',
-    })) || [];
-  } catch {
-    return [];
-  }
-}
-
 async function performWebSearchFallback(query: string): Promise<SearchResult[]> {
   const searchUrl = `https://ddg-api.vercel.app/search?q=${encodeURIComponent(query)}&max_results=5`;
   

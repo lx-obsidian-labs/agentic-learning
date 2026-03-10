@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Star, StarHalf } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StarRatingProps {
@@ -211,6 +211,7 @@ interface LectureReviewsListProps {
 }
 
 export function LectureReviewsList({ lessonId, reviews = [] }: LectureReviewsListProps) {
+  void lessonId;
   if (reviews.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500 dark:text-gray-400">

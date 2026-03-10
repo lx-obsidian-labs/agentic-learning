@@ -171,21 +171,21 @@ export default function AITutorWidget() {
                       <ReactMarkdown 
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          h1: ({node, ...props}) => <h1 className="text-lg font-bold mb-2" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-base font-bold mb-2 mt-3" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-1 mt-2" {...props} />,
-                          p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-2" {...props} />,
-                          ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2" {...props} />,
-                          li: ({node, ...props}) => <li className="mb-1" {...props} />,
-                          code: ({node, ...props}) => <code className="bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded text-xs" {...props} />,
-                          pre: ({node, ...props}) => <pre className="bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto mb-2 text-xs" {...props} />,
-                          table: ({node, ...props}) => <table className="w-full border-collapse mb-2 text-xs" {...props} />,
-                          th: ({node, ...props}) => <th className="border border-gray-300 dark:border-gray-600 p-2 bg-gray-200 dark:bg-gray-700 text-left" {...props} />,
-                          td: ({node, ...props}) => <td className="border border-gray-300 dark:border-gray-600 p-2" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
-                          em: ({node, ...props}) => <em className="italic" {...props} />,
-                          a: ({node, ...props}) => <a className="text-blue-600 dark:text-blue-400 underline" {...props} />,
+                          h1: (props) => <h1 className="text-lg font-bold mb-2" {...props} />,
+                          h2: (props) => <h2 className="text-base font-bold mb-2 mt-3" {...props} />,
+                          h3: (props) => <h3 className="text-sm font-semibold mb-1 mt-2" {...props} />,
+                          p: (props) => <p className="mb-2 last:mb-0" {...props} />,
+                          ul: (props) => <ul className="list-disc pl-4 mb-2" {...props} />,
+                          ol: (props) => <ol className="list-decimal pl-4 mb-2" {...props} />,
+                          li: (props) => <li className="mb-1" {...props} />,
+                          code: (props) => <code className="bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded text-xs" {...props} />,
+                          pre: (props) => <pre className="bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto mb-2 text-xs" {...props} />,
+                          table: (props) => <table className="w-full border-collapse mb-2 text-xs" {...props} />,
+                          th: (props) => <th className="border border-gray-300 dark:border-gray-600 p-2 bg-gray-200 dark:bg-gray-700 text-left" {...props} />,
+                          td: (props) => <td className="border border-gray-300 dark:border-gray-600 p-2" {...props} />,
+                          strong: (props) => <strong className="font-semibold" {...props} />,
+                          em: (props) => <em className="italic" {...props} />,
+                          a: (props) => <a className="text-blue-600 dark:text-blue-400 underline" {...props} />,
                         }}
                       >
                         {msg.content}

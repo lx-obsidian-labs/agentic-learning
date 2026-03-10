@@ -250,7 +250,8 @@ export function useProgress() {
     }
   }, [progress, isLoaded]);
 
-  const completeLesson = (lessonId: string, _courseId: string) => {
+  const completeLesson = (lessonId: string, courseId: string) => {
+    void courseId;
     if (progress.completedLessons.includes(lessonId)) return;
     
     const today = new Date().toISOString().split('T')[0];
@@ -511,7 +512,8 @@ export function useProgress() {
     return percentage >= 80;
   };
 
-  const getQuizForDifficulty = (_lessonTitle: string): { difficulty: number; count: number } => {
+  const getQuizForDifficulty = (lessonTitle: string): { difficulty: number; count: number } => {
+    void lessonTitle;
     const difficulty = progress.analytics.adaptiveDifficulty;
     
     switch (difficulty) {
@@ -559,7 +561,7 @@ export function useProgress() {
     }
     
     return insights;
-  }, [progress.analytics, getTopicsForReview]);
+  }, [progress.analytics, progress.streak]);
 
   const getRecommendedLessons = useCallback(() => {
     const reviewTopics = getTopicsForReview(progress.analytics);
@@ -567,7 +569,7 @@ export function useProgress() {
       return reviewTopics;
     }
     return progress.analytics.needsReview;
-  }, [progress.analytics, getTopicsForReview]);
+  }, [progress.analytics]);
 
   const toggleBookmark = (lessonId: string) => {
     const isBookmarked = progress.bookmarks.includes(lessonId);
@@ -645,6 +647,7 @@ export function useProgress() {
   }, []);
 
   const getLessonRating = useCallback((lessonId: string): { average: number; count: number } | null => {
+    void lessonId;
     const ratings = Object.values(progress.lectureRatings);
     if (ratings.length === 0) return null;
     

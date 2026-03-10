@@ -5,8 +5,8 @@ import { useProgress } from '@/hooks/useProgress';
 import { useUser, UserButton } from '@clerk/nextjs';
 import { useNotifications } from '@/components/NotificationContext';
 import { 
-  Moon, Sun, Monitor, Bell, BellOff, Play, RotateCcw, ChevronLeft,
-  User, Download, Shield, HelpCircle, Info, MapPin, Globe, 
+  Moon, Sun, Bell, BellOff, Play, RotateCcw, ChevronLeft,
+  User, Download, Shield, HelpCircle, Info, MapPin,
   GraduationCap, Settings, Trophy
 } from 'lucide-react';
 import Link from 'next/link';

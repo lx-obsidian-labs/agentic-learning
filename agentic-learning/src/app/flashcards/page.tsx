@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useProgress } from '@/hooks/useProgress';
 import { 
   ChevronLeft, 
   Plus, 
@@ -15,9 +14,7 @@ import {
   Edit3,
   Save,
   BookOpen,
-  Lightbulb,
-  Target,
-  RotateCcw
+  Target
 } from 'lucide-react';
 
 interface Flashcard {
@@ -99,7 +96,6 @@ const defaultFlashcards: Flashcard[] = [
 ];
 
 export default function FlashcardsPage() {
-  const { progress } = useProgress();
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [isFlipped, setIsFlipped] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -249,16 +245,6 @@ export default function FlashcardsPage() {
     setNewCard({ front: '', back: '', subject: '', topic: '' });
     setEditingId(null);
     setIsAdding(false);
-  };
-
-  const getQualityLabel = (quality: number) => {
-    switch(quality) {
-      case 1: return 'Again';
-      case 2: return 'Hard';
-      case 3: return 'Good';
-      case 4: return 'Easy';
-      default: return '';
-    }
   };
 
   return (

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useUser, UserButton, UserProfile } from '@clerk/nextjs';
+import { useUser, UserButton } from '@clerk/nextjs';
+import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/clerk';
 import { 
   ChevronLeft,
@@ -9,11 +10,8 @@ import {
   Mail,
   Lock,
   Shield,
-  CreditCard,
   Trash2,
   LogOut,
-  Settings,
-  Bell,
   Key,
   Smartphone,
   Link as LinkIcon,
@@ -179,7 +177,13 @@ export default function AccountSettingsPage() {
                     <div className="flex items-center gap-6 mb-8">
                       <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                         {user?.imageUrl ? (
-                          <img src={getOptimizedImageUrl(user.imageUrl, { width: 96, height: 96 })} alt="Profile" className="w-24 h-24 rounded-full object-cover" />
+                          <Image
+                            src={getOptimizedImageUrl(user.imageUrl, { width: 96, height: 96 }) as string}
+                            alt="Profile"
+                            width={96}
+                            height={96}
+                            className="w-24 h-24 rounded-full object-cover"
+                          />
                         ) : (
                           <User className="w-12 h-12 text-white" />
                         )}

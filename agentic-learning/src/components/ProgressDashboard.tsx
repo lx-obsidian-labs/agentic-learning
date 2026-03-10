@@ -1,7 +1,7 @@
 'use client';
 
 import { UserProgress, badgeInfo } from '@/hooks/useProgress';
-import { Trophy, Flame, Clock, Target, Award, BookOpen, Zap, Star, RotateCcw } from 'lucide-react';
+import { Trophy, Flame, Clock, Target, Award, BookOpen, Zap, RotateCcw } from 'lucide-react';
 
 interface ProgressDashboardProps {
   progress: UserProgress;

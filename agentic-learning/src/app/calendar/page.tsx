@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useProgress } from '@/hooks/useProgress';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -17,8 +16,7 @@ import {
   Edit3,
   Save,
   Brain,
-  Zap,
-  Flame
+  Zap
 } from 'lucide-react';
 
 interface StudySession {
@@ -36,7 +34,6 @@ interface StudySession {
 const STORAGE_KEY = 'agentic-learning-study-schedule';
 
 export default function CalendarPage() {
-  const { progress } = useProgress();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [sessions, setSessions] = useState<StudySession[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);

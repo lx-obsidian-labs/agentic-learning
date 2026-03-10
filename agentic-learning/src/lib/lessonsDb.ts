@@ -57,8 +57,6 @@ const lessonDetailSelect = {
   timestamps: true,
 } satisfies Prisma.LessonSelect;
 
-type LessonDetailRow = Prisma.LessonGetPayload<{ select: typeof lessonDetailSelect }>;
-
 function toCard(row: LessonCardRow): LessonCardDTO {
   return {
     id: row.slug,

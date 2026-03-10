@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, ChevronLeft, Play, Clock, BookOpen, X, Home, ChevronRight, Brain, Lightbulb, Target, Zap, ArrowRight } from 'lucide-react';
+import { Search, ChevronLeft, Play, Clock, BookOpen, X, Home, ChevronRight, Brain, Lightbulb, Target, Zap } from 'lucide-react';
 import type { SubjectDTO } from '@/lib/catalogTypes';
 
 interface SearchResult {

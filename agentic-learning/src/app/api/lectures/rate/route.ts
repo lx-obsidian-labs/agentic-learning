@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     );
 
     return response;
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to submit rating' },
       { status: 500 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { CheckCircle2, XCircle, ArrowRight, ArrowLeft, Award, RotateCcw, Check } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, ArrowLeft, Award, RotateCcw } from 'lucide-react';
 
 interface Question {
   id: string;
@@ -19,7 +19,7 @@ interface QuizProps {
   existingScore?: { score: number; total: number };
 }
 
-export default function Quiz({ lessonId: _lessonId, lessonTitle, questions, onComplete, onClose, existingScore }: QuizProps) {
+export default function Quiz({ lessonId, lessonTitle, questions, onComplete, onClose, existingScore }: QuizProps) {
   const [screen, setScreen] = useState<'quiz' | 'result'>(() => (existingScore ? 'result' : 'quiz'));
   const [resultKind, setResultKind] = useState<'existing' | 'new'>(() => (existingScore ? 'existing' : 'new'));
   const [result, setResult] = useState<{ score: number; total: number } | null>(
@@ -41,35 +41,6 @@ export default function Quiz({ lessonId: _lessonId, lessonTitle, questions, onCo
 
   const selectedAnswer = answers[currentQuestion];
   const showResult = selectedAnswer !== null;
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (screen !== 'quiz') return;
-      
-      if (e.key >= '1' && e.key <= '4') {
-        const optionIndex = parseInt(e.key) - 1;
-        const question = questions[currentQuestion];
-        if (question && optionIndex < question.options.length) {
-          handleAnswer(optionIndex);
-        }
-      }
-      
-      if (e.key === 'ArrowRight' || e.key === 'n') {
-        if (showResult && currentQuestion < questions.length - 1) {
-          handleNext();
-        }
-      }
-      
-      if (e.key === 'ArrowLeft' || e.key === 'p') {
-        if (currentQuestion > 0) {
-          handlePrev();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [screen, currentQuestion, showResult, questions.length, handleAnswer, handleNext, handlePrev]);
 
   const handleAnswer = useCallback((answerIndex: number) => {
     if (selectedAnswer !== null) return;
@@ -97,6 +68,35 @@ export default function Quiz({ lessonId: _lessonId, lessonTitle, questions, onCo
       setCurrentQuestion(idx);
     }
   }, [answers, currentQuestion]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (screen !== 'quiz') return;
+
+      if (e.key >= '1' && e.key <= '4') {
+        const optionIndex = parseInt(e.key) - 1;
+        const question = questions[currentQuestion];
+        if (question && optionIndex < question.options.length) {
+          handleAnswer(optionIndex);
+        }
+      }
+
+      if (e.key === 'ArrowRight' || e.key === 'n') {
+        if (showResult && currentQuestion < questions.length - 1) {
+          handleNext();
+        }
+      }
+
+      if (e.key === 'ArrowLeft' || e.key === 'p') {
+        if (currentQuestion > 0) {
+          handlePrev();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [screen, currentQuestion, showResult, questions, handleAnswer, handleNext, handlePrev]);
 
   const handleRetry = () => {
     setAnswers(Array.from({ length: questions.length }, () => null));
@@ -180,7 +180,7 @@ export default function Quiz({ lessonId: _lessonId, lessonTitle, questions, onCo
   const question = questions[currentQuestion];
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <div data-lesson-id={lessonId} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
         <div className="flex items-center justify-between">
           <h3 className="text-white font-semibold">Quick Quiz</h3>

@@ -17,7 +17,6 @@ import {
   User,
   Target,
   Brain,
-  Clock,
   RefreshCw,
   HelpCircle,
   Calendar,
@@ -118,7 +117,7 @@ export default function TutorPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const handleAgenticMode = async (modeId: string, prompt: string) => {
+  const handleAgenticMode = async (modeId: string) => {
     if (isTyping) return;
 
     const mode = agenticModes.find(m => m.id === modeId);
@@ -383,7 +382,7 @@ export default function TutorPage() {
                   {agenticModes.map((mode) => (
                     <button
                       key={mode.id}
-                      onClick={() => void handleAgenticMode(mode.id, mode.prompt)}
+                      onClick={() => void handleAgenticMode(mode.id)}
                       disabled={activeMode === mode.id}
                       className="px-3 py-2 bg-gradient-to-r from-purple-600/30 to-blue-600/30 hover:from-purple-600/50 hover:to-blue-600/50 text-white/90 text-sm rounded-lg flex flex-col items-start gap-0.5 transition-all disabled:opacity-50"
                     >

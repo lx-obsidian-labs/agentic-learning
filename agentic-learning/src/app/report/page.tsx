@@ -1,31 +1,25 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useProgress } from '@/hooks/useProgress';
 import { 
   ChevronLeft, 
   Brain, 
   Download, 
-  Share2, 
   Target,
   TrendingUp,
   BookOpen,
   Calculator,
-  Music,
   Palette,
   Users,
   Activity,
   Lightbulb,
   Award,
   FileText,
-  Printer,
-  Mail,
   CheckCircle,
-  Clock,
   Zap,
   Star,
-  ChevronRight,
   Sparkles
 } from 'lucide-react';
 
@@ -51,9 +45,8 @@ interface CareerPath {
 }
 
 export default function IntelligenceReportPage() {
-  const { progress, getLearningInsights } = useProgress();
+  const { progress } = useProgress();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showShare, setShowShare] = useState(false);
 
   const intelligenceScores = useMemo((): IntelligenceScores => {
     const analytics = progress.analytics;
@@ -122,7 +115,6 @@ export default function IntelligenceReportPage() {
   }, [progress]);
 
   const careerPaths: CareerPath[] = useMemo(() => {
-    const topics = Object.keys(progress.analytics.topicScores || {});
     const scores = intelligenceScores;
     
     const paths: CareerPath[] = [
@@ -185,7 +177,7 @@ export default function IntelligenceReportPage() {
     ];
 
     return paths.sort((a, b) => b.matchPercentage - a.matchPercentage).slice(0, 5);
-  }, [progress, intelligenceScores]);
+  }, [intelligenceScores]);
 
   const getIQCategory = (score: number): { label: string; color: string; description: string } => {
     if (score >= 130) return { label: 'Gifted', color: 'text-purple-600', description: 'Exceptionally high cognitive ability' };

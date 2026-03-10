@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CURATED_VIDEOS, searchCuratedVideos, getCuratedVideosBySubject } from './curatedVideos';
+import { CURATED_VIDEOS } from './curatedVideos';
 import { INTERNATIONAL_EDUCATIONAL_VIDEOS, ADDITIONAL_MATH_VIDEOS } from './supplementaryVideos';
 import { getVideoMetadata, searchEducationalVideos, formatDuration } from './videoService';
 

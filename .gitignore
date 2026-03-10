@@ -3,6 +3,7 @@
 nul
 node_modules
 .env
+.env.test
 .venv
 .codex
 out

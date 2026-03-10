@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchEducationalVideos, getVideoMetadata, searchVideosFromInvidious } from '@/lib/videoService';
+import { searchEducationalVideos, getVideoMetadata } from '@/lib/videoService';
 import { searchCuratedVideos, getCuratedVideosBySubject, getCuratedVideosByGrade } from '@/lib/curatedVideos';
 import { SA_EDUCATIONAL_CHANNELS } from '@/lib/videoSources';
 

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import type { CourseCardDTO } from '@/lib/catalogTypes';
 import { Clock, User, BarChart3 } from 'lucide-react';
 
@@ -25,9 +26,11 @@ export default function CourseCard({ course }: CourseCardProps) {
           }}
         >
           {course.thumbnailUrl && (
-            <img 
-              src={course.thumbnailUrl} 
+            <Image
+              src={course.thumbnailUrl}
               alt={course.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 33vw"
               className="absolute inset-0 w-full h-full object-cover opacity-30"
             />
           )}

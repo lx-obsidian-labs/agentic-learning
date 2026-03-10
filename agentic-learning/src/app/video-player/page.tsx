@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useProgress } from '@/hooks/useProgress';
 import { 
@@ -23,13 +23,6 @@ import {
   ArrowRight,
   Brain
 } from 'lucide-react';
-
-interface VideoPlayerProps {
-  videoId: string;
-  videoTitle: string;
-  videoUrl: string;
-  description?: string;
-}
 
 interface QuizQuestion {
   id: string;
@@ -74,7 +67,7 @@ const MOCK_QUIZ_QUESTIONS: Record<string, QuizQuestion[]> = {
 export default function VideoPlayerPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { addWatchTime, addQuizScore, isLessonCompleted } = useProgress();
+  const { addWatchTime, addQuizScore } = useProgress();
 
   const [videoUrl] = useState('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -87,7 +80,6 @@ export default function VideoPlayerPage() {
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [quizShownAt, setQuizShownAt] = useState<number | null>(null);
-  const [bookmarked, setBookmarked] = useState(false);
   const [notes, setNotes] = useState('');
   const [showNotes, setShowNotes] = useState(false);
 

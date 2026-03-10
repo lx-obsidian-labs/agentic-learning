@@ -38,24 +38,6 @@ export interface CuratedVideo {
   captions: boolean;
 }
 
-async function fetchWithFallback(urls: string[], options: RequestInit = {}): Promise<Response> {
-  for (const url of urls) {
-    try {
-      const response = await fetch(url, {
-        ...options,
-        next: { revalidate: 3600 }
-      });
-      if (response.ok) {
-        return response;
-      }
-    } catch (error) {
-      console.warn(`Failed to fetch from ${url}:`, error);
-      continue;
-    }
-  }
-  throw new Error('All fetch attempts failed');
-}
-
 export async function getVideoMetadataFromInvidious(videoId: string): Promise<VideoMetadata | null> {
   const instances = [...INVIDIOUS_INSTANCES];
   

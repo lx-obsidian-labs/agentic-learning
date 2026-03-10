@@ -323,7 +323,7 @@ export default function CoursePage() {
                       </div>
                       
                       <div>
-                        {module.lessons.map((lesson, lessonIdx) => {
+                        {module.lessons.map((lesson) => {
                           const allLessons = course.modules.flatMap(m => m.lessons);
                           const lessonIndex = allLessons.findIndex(l => l.id === lesson.id);
                           const isUnlocked = isLessonUnlocked(lesson.id, allLessons.map(l => l.id), lessonIndex);

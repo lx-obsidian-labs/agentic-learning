@@ -8,11 +8,11 @@ import CourseCard from '@/components/CourseCard';
 import BrainLogo from '@/components/BrainLogo';
 import { UserButton, useUser } from '@clerk/nextjs';
 import NotificationBell from '@/components/NotificationBell';
-import { Brain, Zap, Target, ChevronRight, Flame, Trophy, Clock, Search, Bookmark, Settings, BookOpen, BarChart3, FileText, Users, Menu, X as CloseIcon, Bot, Award, ChevronDown, LogIn, Gift, BrainCircuit, CalendarDays, GraduationCap } from 'lucide-react';
+import { Brain, Zap, Target, ChevronRight, Flame, Trophy, Search, Bookmark, Settings, BookOpen, BarChart3, FileText, Users, Menu, X as CloseIcon, Bot, Award, ChevronDown, Gift, BrainCircuit, CalendarDays, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn } = useUser();
   const { progress, isLoaded } = useProgress();
   const [catalogSubjects, setCatalogSubjects] = useState<SubjectDTO[]>([]);
   const [catalogCourses, setCatalogCourses] = useState<CourseCardDTO[]>([]);
